@@ -1,7 +1,9 @@
 <?php
 namespace App\Filament\Resources;
 use App\Filament\Resources\PrestadorResource\Pages;
+use App\Filament\Imports\PrestadorImporter;
 use App\Models\Prestador;
+use Filament\Actions\Imports\ImportAction;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -36,6 +38,7 @@ class PrestadorResource extends Resource
             Tables\Columns\IconColumn::make('ativo')->label('Ativo')->boolean(),
         ])
         ->filters([Tables\Filters\TernaryFilter::make('ativo')->trueLabel('Ativos')->falseLabel('Inativos')])
+        ->headerActions([ImportAction::make()->importer(PrestadorImporter::class)->label('Importar Planilha')])
         ->actions([Tables\Actions\EditAction::make()->slideOver(), Tables\Actions\DeleteAction::make()])
         ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])])
         ->defaultSort('nome')->striped();

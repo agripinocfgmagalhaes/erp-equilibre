@@ -1,7 +1,9 @@
 <?php
 namespace App\Filament\Resources;
 use App\Filament\Resources\ClienteResource\Pages;
+use App\Filament\Imports\ClienteImporter;
 use App\Models\Cliente;
+use Filament\Actions\Imports\ImportAction;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -42,6 +44,7 @@ class ClienteResource extends Resource
             Tables\Columns\IconColumn::make('ativo')->label('Ativo')->boolean(),
         ])
         ->filters([Tables\Filters\TernaryFilter::make('ativo')->trueLabel('Ativos')->falseLabel('Inativos')])
+        ->headerActions([ImportAction::make()->importer(ClienteImporter::class)->label('Importar Planilha')])
         ->actions([Tables\Actions\EditAction::make()->slideOver(), Tables\Actions\DeleteAction::make()])
         ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])])
         ->defaultSort('nome')->striped();
