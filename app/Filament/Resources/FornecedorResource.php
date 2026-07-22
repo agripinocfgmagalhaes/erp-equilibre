@@ -3,7 +3,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\FornecedorResource\Pages;
 use App\Filament\Imports\FornecedorImporter;
 use App\Models\Fornecedor;
-use Filament\Actions\ImportAction;
+use Filament\Tables\Actions\ImportAction;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;

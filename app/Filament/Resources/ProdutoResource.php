@@ -3,7 +3,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ProdutoResource\Pages;
 use App\Filament\Imports\ProdutoImporter;
 use App\Models\Produto;
-use Filament\Actions\ImportAction;
+use Filament\Tables\Actions\ImportAction;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
