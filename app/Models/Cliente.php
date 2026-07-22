@@ -6,7 +6,7 @@ class Cliente extends Model
     protected $fillable = [
         'nome', 'cpf', 'email', 'telefone', 'whatsapp',
         'renda_familiar', 'estado_civil', 'profissao',
-        'conjuge_nome', 'conjuge_cpf', 'conjuge_renda',
+        'conjuge_nome', 'conjuge_cpf', 'conjuge_renda', 'conjuge_profissao', 'conjuge_email', 'conjuge_telefone',
         'cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'estado',
         'observacoes', 'ativo',
     ];

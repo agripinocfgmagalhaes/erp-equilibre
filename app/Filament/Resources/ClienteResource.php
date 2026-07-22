@@ -33,6 +33,9 @@ class ClienteResource extends Resource
             Forms\Components\Section::make('Dados do Cônjuge')->schema([
                 Forms\Components\TextInput::make('conjuge_nome')->label('Nome do Cônjuge')->maxLength(100),
                 Forms\Components\TextInput::make('conjuge_cpf')->label('CPF do Cônjuge')->maxLength(14),
+                Forms\Components\TextInput::make('conjuge_profissao')->label('Profissão do Cônjuge')->maxLength(100),
+                Forms\Components\TextInput::make('conjuge_email')->label('E-mail do Cônjuge')->email()->maxLength(100),
+                Forms\Components\TextInput::make('conjuge_telefone')->label('Telefone do Cônjuge')->maxLength(20),
                 Forms\Components\TextInput::make('conjuge_renda')->label('Renda do Cônjuge')->numeric()->prefix('R$'),
             ])->columns(3)->visible(fn (callable $get) => in_array($get('estado_civil'), ['casado', 'uniao_estavel'])),
             Forms\Components\Section::make('Endereço')->schema([
