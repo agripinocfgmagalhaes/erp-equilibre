@@ -1,7 +1,9 @@
 <?php
 namespace App\Filament\Resources;
 use App\Filament\Resources\ProjetoResource\Pages;
+use App\Filament\Imports\ProjetoImporter;
 use App\Models\Projeto;
+use Filament\Actions\Imports\ImportAction;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Components\Section;
@@ -62,6 +64,7 @@ class ProjetoResource extends Resource
             Tables\Columns\TextColumn::make('data_inicio')->label('Início')->date('d/m/Y')->placeholder('—'),
             Tables\Columns\TextColumn::make('data_previsao_fim')->label('Previsão Fim')->date('d/m/Y')->placeholder('—'),
         ])
+        ->headerActions([ImportAction::make()->importer(ProjetoImporter::class)->label('Importar Planilha')])
         ->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()])
         ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])])
         ->defaultSort('nome')->striped();
