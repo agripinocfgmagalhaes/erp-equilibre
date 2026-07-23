@@ -19,6 +19,8 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use Hydrat\TableLayoutToggle\TableLayoutTogglePlugin;
+use Hydrat\TableLayoutToggle\Persisters\CachePersister;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -36,6 +38,12 @@ class AdminPanelProvider extends PanelProvider
             ->pages([Dashboard::class])
             ->widgets([])
             ->plugin(FilamentShieldPlugin::make())
+            ->plugin(
+                TableLayoutTogglePlugin::make()
+                    ->setDefaultLayout('list')
+                    ->persistLayoutUsing(persister: CachePersister::class)
+                    ->enableAutoMobileLayout()
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
