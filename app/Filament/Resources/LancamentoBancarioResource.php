@@ -1,10 +1,23 @@
 <?php
 namespace App\Filament\Resources;
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use App\Filament\Resources\LancamentoBancarioResource\Pages\ListLancamentosBancarios;
+use App\Filament\Resources\LancamentoBancarioResource\Pages\CreateLancamentoBancario;
+use App\Filament\Resources\LancamentoBancarioResource\Pages\EditLancamentoBancario;
 use App\Filament\Resources\LancamentoBancarioResource\Pages;
 use App\Models\LancamentoBancario;
 use App\Models\ContaBancaria;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -12,37 +25,37 @@ use Illuminate\Database\Eloquent\Builder;
 class LancamentoBancarioResource extends Resource
 {
     protected static ?string $model = LancamentoBancario::class;
-    protected static ?string $navigationIcon = 'heroicon-o-banknotes';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-banknotes';
     protected static ?string $navigationLabel = 'Extrato Bancário';
-    protected static ?string $navigationGroup = 'Financeiro';
+    protected static string | \UnitEnum | null $navigationGroup = 'Financeiro';
     protected static ?int $navigationSort = 3;
     protected static ?string $slug = 'extrato-bancario';
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\Select::make('conta_bancaria_id')->label('Conta Bancária')->options(ContaBancaria::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->required(),
-            Forms\Components\Select::make('tipo')->label('Tipo')->native(false)->required()->options(['entrada' => 'Entrada', 'saida' => 'Saída']),
-            Forms\Components\TextInput::make('descricao')->label('Descrição')->required()->maxLength(200)->columnSpanFull(),
-            Forms\Components\TextInput::make('valor')->label('Valor')->numeric()->prefix('R$')->step(0.01)->required(),
-            Forms\Components\DatePicker::make('data')->label('Data')->native(false)->displayFormat('d/m/Y')->default(now())->required(),
-            Forms\Components\Textarea::make('observacoes')->label('Observações')->rows(2)->columnSpanFull(),
+        return $schema->components([
+            Select::make('conta_bancaria_id')->label('Conta Bancária')->options(ContaBancaria::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->required(),
+            Select::make('tipo')->label('Tipo')->native(false)->required()->options(['entrada' => 'Entrada', 'saida' => 'Saída']),
+            TextInput::make('descricao')->label('Descrição')->required()->maxLength(200)->columnSpanFull(),
+            TextInput::make('valor')->label('Valor')->numeric()->prefix('R$')->step(0.01)->required(),
+            DatePicker::make('data')->label('Data')->native(false)->displayFormat('d/m/Y')->default(now())->required(),
+            Textarea::make('observacoes')->label('Observações')->rows(2)->columnSpanFull(),
         ])->columns(2);
     }
     public static function table(Table $table): Table
     {
         return $table->modifyQueryUsing(fn (Builder $query) => $query->with('contaBancaria'))
             ->columns([
-                Tables\Columns\TextColumn::make('data')->label('Data')->date('d/m/Y')->sortable(),
-                Tables\Columns\TextColumn::make('contaBancaria.nome')->label('Conta')->sortable(),
-                Tables\Columns\TextColumn::make('descricao')->label('Descrição')->searchable()->limit(50),
-                Tables\Columns\TextColumn::make('origem')->label('Origem')->badge()
+                TextColumn::make('data')->label('Data')->date('d/m/Y')->sortable(),
+                TextColumn::make('contaBancaria.nome')->label('Conta')->sortable(),
+                TextColumn::make('descricao')->label('Descrição')->searchable()->limit(50),
+                TextColumn::make('origem')->label('Origem')->badge()
                     ->colors(['gray' => 'manual', 'warning' => 'conta_pagar', 'success' => 'conta_receber'])
                     ->formatStateUsing(fn ($state) => match($state) { 'manual' => 'Manual', 'conta_pagar' => 'CP', 'conta_receber' => 'CR', default => $state }),
-                Tables\Columns\TextColumn::make('tipo')->label('Tipo')->badge()
+                TextColumn::make('tipo')->label('Tipo')->badge()
                     ->colors(['success' => 'entrada', 'danger' => 'saida'])
                     ->formatStateUsing(fn ($state) => $state === 'entrada' ? '▲ Entrada' : '▼ Saída'),
-                Tables\Columns\TextColumn::make('valor')->label('Valor')->money('BRL')->sortable()->color(fn ($record) => $record->tipo === 'entrada' ? 'success' : 'danger'),
-                Tables\Columns\TextColumn::make('saldo_acumulado')->label('Saldo')
+                TextColumn::make('valor')->label('Valor')->money('BRL')->sortable()->color(fn ($record) => $record->tipo === 'entrada' ? 'success' : 'danger'),
+                TextColumn::make('saldo_acumulado')->label('Saldo')
                     ->getStateUsing(function ($record, $livewire) {
                         static $saldos = null;
                         static $lastKey = null;
@@ -78,22 +91,22 @@ class LancamentoBancarioResource extends Resource
                     }),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('conta_bancaria_id')->label('Conta Bancária')->options(ContaBancaria::pluck('nome', 'id'))->searchable()->default(fn () => ContaBancaria::where('ativo', true)->value('id')),
-                Tables\Filters\SelectFilter::make('tipo')->options(['entrada' => 'Entrada', 'saida' => 'Saída']),
-                Tables\Filters\Filter::make('periodo')->form([
-                    Forms\Components\DatePicker::make('data_de')->label('De')->native(false)->displayFormat('d/m/Y'),
-                    Forms\Components\DatePicker::make('data_ate')->label('Até')->native(false)->displayFormat('d/m/Y'),
+                SelectFilter::make('conta_bancaria_id')->label('Conta Bancária')->options(ContaBancaria::pluck('nome', 'id'))->searchable()->default(fn () => ContaBancaria::where('ativo', true)->value('id')),
+                SelectFilter::make('tipo')->options(['entrada' => 'Entrada', 'saida' => 'Saída']),
+                Filter::make('periodo')->schema([
+                    DatePicker::make('data_de')->label('De')->native(false)->displayFormat('d/m/Y'),
+                    DatePicker::make('data_ate')->label('Até')->native(false)->displayFormat('d/m/Y'),
                 ])->query(fn ($query, array $data) => $query->when($data['data_de'], fn ($q, $v) => $q->whereDate('data', '>=', $v))->when($data['data_ate'], fn ($q, $v) => $q->whereDate('data', '<=', $v)))->columns(2),
             ])
-            ->filtersLayout(Tables\Enums\FiltersLayout::AboveContent)
-            ->actions([
-                Tables\Actions\EditAction::make()->slideOver()->visible(fn (LancamentoBancario $record) => $record->origem === 'manual'),
-                Tables\Actions\DeleteAction::make()->visible(fn (LancamentoBancario $record) => $record->origem === 'manual'),
+            ->filtersLayout(FiltersLayout::AboveContent)
+            ->recordActions([
+                EditAction::make()->slideOver()->visible(fn (LancamentoBancario $record) => $record->origem === 'manual'),
+                DeleteAction::make()->visible(fn (LancamentoBancario $record) => $record->origem === 'manual'),
             ])
-            ->bulkActions([])->defaultSort('data', 'asc');
+            ->toolbarActions([])->defaultSort('data', 'asc');
     }
     public static function getPages(): array
     {
-        return ['index' => Pages\ListLancamentosBancarios::route('/'), 'create' => Pages\CreateLancamentoBancario::route('/create'), 'edit' => Pages\EditLancamentoBancario::route('/{record}/edit')];
+        return ['index' => ListLancamentosBancarios::route('/'), 'create' => CreateLancamentoBancario::route('/create'), 'edit' => EditLancamentoBancario::route('/{record}/edit')];
     }
 }

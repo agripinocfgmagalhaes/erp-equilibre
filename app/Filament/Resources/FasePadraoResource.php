@@ -1,41 +1,50 @@
 <?php
 namespace App\Filament\Resources;
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\FasePadraoResource\Pages\ListFasesPadrao;
+use App\Filament\Resources\FasePadraoResource\Pages\CreateFasePadrao;
+use App\Filament\Resources\FasePadraoResource\Pages\EditFasePadrao;
 use App\Filament\Resources\FasePadraoResource\Pages;
 use App\Models\FasePadrao;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 class FasePadraoResource extends Resource
 {
     protected static ?string $model = FasePadrao::class;
-    protected static ?string $navigationIcon = 'heroicon-o-queue-list';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-queue-list';
     protected static ?string $navigationLabel = 'Fases Padrão';
-    protected static ?string $navigationGroup = 'Configurações';
+    protected static string | \UnitEnum | null $navigationGroup = 'Configurações';
     protected static ?int $navigationSort = 4;
     protected static ?string $slug = 'fases-padrao';
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\TextInput::make('nome')->label('Nome')->required()->maxLength(100)->columnSpanFull(),
-            Forms\Components\TextInput::make('macro_categoria')->label('Macro Categoria')->maxLength(100),
-            Forms\Components\TextInput::make('ordem')->label('Ordem')->numeric()->default(0),
+        return $schema->components([
+            TextInput::make('nome')->label('Nome')->required()->maxLength(100)->columnSpanFull(),
+            TextInput::make('macro_categoria')->label('Macro Categoria')->maxLength(100),
+            TextInput::make('ordem')->label('Ordem')->numeric()->default(0),
         ])->columns(2);
     }
     public static function table(Table $table): Table
     {
         return $table->columns([
-            Tables\Columns\TextColumn::make('ordem')->label('Ordem')->sortable(),
-            Tables\Columns\TextColumn::make('nome')->label('Nome')->searchable()->weight('medium'),
-            Tables\Columns\TextColumn::make('macro_categoria')->label('Macro Categoria')->placeholder('—'),
+            TextColumn::make('ordem')->label('Ordem')->sortable(),
+            TextColumn::make('nome')->label('Nome')->searchable()->weight('medium'),
+            TextColumn::make('macro_categoria')->label('Macro Categoria')->placeholder('—'),
         ])
-        ->actions([Tables\Actions\EditAction::make()->slideOver(), Tables\Actions\DeleteAction::make()])
-        ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])])
+        ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
+        ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
         ->defaultSort('ordem')->striped();
     }
     public static function getPages(): array
     {
-        return ['index' => Pages\ListFasesPadrao::route('/'), 'create' => Pages\CreateFasePadrao::route('/create'), 'edit' => Pages\EditFasePadrao::route('/{record}/edit')];
+        return ['index' => ListFasesPadrao::route('/'), 'create' => CreateFasePadrao::route('/create'), 'edit' => EditFasePadrao::route('/{record}/edit')];
     }
 }

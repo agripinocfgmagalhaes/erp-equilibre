@@ -1,5 +1,6 @@
 <?php
 namespace App\Filament\Imports;
+use Throwable;
 use App\Models\Projeto;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
@@ -28,7 +29,7 @@ class ProjetoImporter extends Importer
         }
         try {
             return Carbon::createFromFormat('d/m/Y', trim($state))->format('Y-m-d');
-        } catch (\Throwable) {
+        } catch (Throwable) {
             return $state;
         }
     }
