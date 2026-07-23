@@ -1,10 +1,11 @@
 <?php
 namespace App\Filament\Resources\PrestadorResource\Pages;
+use Filament\Actions\CreateAction;
 use App\Filament\Resources\PrestadorResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 class ListPrestadores extends ListRecords
 {
     protected static string $resource = PrestadorResource::class;
-    protected function getHeaderActions(): array { return [Actions\CreateAction::make()->slideOver()->label('+ Novo Prestador')]; }
+    protected function getHeaderActions(): array { return [CreateAction::make()->slideOver()->label('+ Novo Prestador')]; }
 }

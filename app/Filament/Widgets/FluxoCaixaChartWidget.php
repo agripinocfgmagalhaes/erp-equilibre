@@ -5,9 +5,9 @@ use App\Models\ContaReceber;
 use Filament\Widgets\ChartWidget;
 class FluxoCaixaChartWidget extends ChartWidget
 {
-    protected static ?string $heading = 'Fluxo de Caixa — Últimos 6 Meses';
+    protected ?string $heading = 'Fluxo de Caixa — Últimos 6 Meses';
     protected static ?int $sort = 2;
-    protected static ?string $maxHeight = '300px';
+    protected ?string $maxHeight = '300px';
     protected function getData(): array
     {
         $meses = collect(range(5, 0))->map(fn ($i) => now()->startOfMonth()->subMonths($i));

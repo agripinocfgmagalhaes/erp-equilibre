@@ -1,5 +1,6 @@
 <?php
 namespace App\Filament\Widgets;
+use Filament\Tables\Columns\TextColumn;
 use App\Models\ContaPagar;
 use App\Models\ContaBancaria;
 use Filament\Tables;
@@ -16,10 +17,10 @@ class VencimentosHojeWidget extends BaseWidget
         return $table
             ->query(ContaPagar::whereDate('data_vencimento', today())->whereIn('status', ['aberto', 'vencido']))
             ->columns([
-                Tables\Columns\TextColumn::make('descricao')->label('Descrição')->limit(40),
-                Tables\Columns\TextColumn::make('nome_contato')->label('Contato')->getStateUsing(fn ($record) => $record->nome_contato_attribute),
-                Tables\Columns\TextColumn::make('valor')->label('Valor')->money('BRL'),
-                Tables\Columns\TextColumn::make('status')->label('Status')->badge()->colors(['gray' => 'aberto', 'danger' => 'vencido']),
+                TextColumn::make('descricao')->label('Descrição')->limit(40),
+                TextColumn::make('nome_contato')->label('Contato')->getStateUsing(fn ($record) => $record->nome_contato_attribute),
+                TextColumn::make('valor')->label('Valor')->money('BRL'),
+                TextColumn::make('status')->label('Status')->badge()->colors(['gray' => 'aberto', 'danger' => 'vencido']),
             ])
             ->paginated(false);
     }
