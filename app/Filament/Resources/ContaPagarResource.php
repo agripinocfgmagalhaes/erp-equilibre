@@ -9,6 +9,8 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\Layout\Stack;
+use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
@@ -70,18 +72,13 @@ class ContaPagarResource extends Resource
     }
     public static function table(Table $table): Table
     {
-        return $table->columns([
-            TextColumn::make('descricao')->label('Descrição')->searchable()->weight('medium')->limit(40),
-            TextColumn::make('nome_contato')->label('Contato')->getStateUsing(fn ($record) => $record->nome_contato_attribute),
-            TextColumn::make('valor')->label('Valor')->money('BRL')->sortable(),
-            TextColumn::make('valor_pago')->label('Pago')->money('BRL')->sortable(),
-            TextColumn::make('data_vencimento')->label('Vencimento')->date('d/m/Y')->sortable(),
-            TextColumn::make('status')->label('Status')->badge()
-                ->colors(['gray' => 'aberto', 'success' => 'pago', 'danger' => 'vencido', 'warning' => 'cancelado'])
-                ->formatStateUsing(fn ($state) => match($state) { 'aberto' => 'Aberto', 'pago' => 'Pago', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado', default => $state }),
-        ])
-        ->filters([SelectFilter::make('status')->options(['aberto' => 'Aberto', 'pago' => 'Pago', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado'])])
-        ->recordActions([
+        /** @var \Hydrat\TableLayoutToggle\Concerns\HasToggleableTable $livewire */
+        $livewire = $table->getLivewire();
+        return $table
+            ->columns($livewire->isGridLayout() ? static::getGridTableColumns() : static::getListTableColumns())
+            ->contentGrid(fn () => $livewire->isListLayout() ? null : ['md' => 2, 'lg' => 3])
+            ->filters([SelectFilter::make('status')->options(['aberto' => 'Aberto', 'pago' => 'Pago', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado'])])
+            ->recordActions([
             Action::make('darBaixa')->label('Dar Baixa')->icon('heroicon-o-check-circle')->color('success')
                 ->visible(fn (ContaPagar $record) => ! in_array($record->status, ['pago', 'cancelado']))
                 ->schema([
@@ -96,6 +93,37 @@ class ContaPagarResource extends Resource
         ])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
         ->defaultSort('data_vencimento')->striped();
+    }
+    protected static function getListTableColumns(): array
+    {
+        return [
+            TextColumn::make('descricao')->label('Descrição')->searchable()->sortable()->weight('medium'),
+            TextColumn::make('nome_contato')->label('Contato')->placeholder('—'),
+            TextColumn::make('valor')->label('Valor')->money('BRL')->sortable(),
+            TextColumn::make('data_vencimento')->label('Vencimento')->date('d/m/Y')->sortable(),
+            TextColumn::make('status')->label('Status')->badge()
+                ->colors(['gray' => 'aberto', 'success' => 'pago', 'danger' => 'vencido', 'secondary' => 'cancelado'])
+                ->formatStateUsing(fn ($state) => ['aberto' => 'Aberto', 'pago' => 'Pago', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado'][$state] ?? $state),
+        ];
+    }
+    protected static function getGridTableColumns(): array
+    {
+        return [
+            Stack::make([
+                Split::make([
+                    TextColumn::make('descricao')->label('Descrição')->searchable()->sortable()->weight('medium'),
+                    TextColumn::make('status')->label('Status')->badge()
+                        ->colors(['gray' => 'aberto', 'success' => 'pago', 'danger' => 'vencido', 'secondary' => 'cancelado'])
+                        ->formatStateUsing(fn ($state) => ['aberto' => 'Aberto', 'pago' => 'Pago', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado'][$state] ?? $state)
+                        ->grow(false),
+                ]),
+                TextColumn::make('nome_contato')->label('Contato')->description('Contato', position: 'above')->placeholder('—'),
+                Split::make([
+                    TextColumn::make('valor')->label('Valor')->description('Valor', position: 'above')->money('BRL'),
+                    TextColumn::make('data_vencimento')->label('Vencimento')->description('Vencimento', position: 'above')->date('d/m/Y'),
+                ]),
+            ])->space(3)->extraAttributes(['class' => 'pb-2']),
+        ];
     }
     public static function getPages(): array
     {
