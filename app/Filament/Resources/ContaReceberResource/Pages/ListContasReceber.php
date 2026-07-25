@@ -5,8 +5,10 @@ use Filament\Actions\CreateAction;
 use App\Filament\Resources\ContaReceberResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use Hydrat\TableLayoutToggle\Concerns\HasToggleableTable;
 class ListContasReceber extends ListRecords
 {
+    use HasToggleableTable;
     protected static string $resource = ContaReceberResource::class;
     protected Width|string|null $maxContentWidth = 'full';
     protected function getHeaderActions(): array { return [CreateAction::make()->slideOver()->modalWidth('4xl')->label('+ Novo Título')]; }

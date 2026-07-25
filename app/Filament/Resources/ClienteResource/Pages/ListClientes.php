@@ -4,8 +4,10 @@ use Filament\Actions\CreateAction;
 use App\Filament\Resources\ClienteResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use Hydrat\TableLayoutToggle\Concerns\HasToggleableTable;
 class ListClientes extends ListRecords
 {
+    use HasToggleableTable;
     protected static string $resource = ClienteResource::class;
     protected function getHeaderActions(): array { return [CreateAction::make()->slideOver()->label('+ Novo Cliente')]; }
 }

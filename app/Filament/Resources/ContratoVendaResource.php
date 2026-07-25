@@ -8,6 +8,8 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\Layout\Stack;
+use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Actions\Action;
 use Carbon\Carbon;
@@ -92,17 +94,11 @@ class ContratoVendaResource extends Resource
     }
     public static function table(Table $table): Table
     {
-        return $table->columns([
-            TextColumn::make('numero')->label('Número')->searchable()->sortable()->weight('medium'),
-            TextColumn::make('unidade.identificacao')->label('Unidade')->searchable(),
-            TextColumn::make('unidade.projeto.nome')->label('Empreendimento')->searchable(),
-            TextColumn::make('cliente.nome')->label('Cliente')->searchable()->sortable(),
-            TextColumn::make('valor_venda')->label('Valor')->money('BRL')->sortable(),
-            TextColumn::make('data_contrato')->label('Data')->date('d/m/Y')->sortable(),
-            TextColumn::make('status')->label('Status')->badge()
-                ->colors(['success' => 'ativo', 'warning' => 'distratado', 'danger' => 'cancelado'])
-                ->formatStateUsing(fn ($state) => match($state) { 'ativo' => 'Ativo', 'distratado' => 'Distratado', 'cancelado' => 'Cancelado', default => $state }),
-        ])
+        /** @var \Hydrat\TableLayoutToggle\Concerns\HasToggleableTable $livewire */
+        $livewire = $table->getLivewire();
+        return $table
+        ->columns($livewire->isGridLayout() ? static::getGridTableColumns() : static::getListTableColumns())
+        ->contentGrid(fn () => $livewire->isListLayout() ? null : ['md' => 2, 'lg' => 3])
         ->filters([SelectFilter::make('status')->options(['ativo' => 'Ativo', 'distratado' => 'Distratado', 'cancelado' => 'Cancelado'])])
         ->recordActions([
             Action::make('gerarCR')->label('Gerar CR')->icon('heroicon-o-banknotes')->color('warning')
@@ -142,6 +138,43 @@ class ContratoVendaResource extends Resource
         ])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
         ->defaultSort('created_at', 'desc')->striped();
+    }
+    protected static function getListTableColumns(): array
+    {
+        return [
+            TextColumn::make('numero')->label('Número')->searchable()->sortable()->weight('medium'),
+            TextColumn::make('unidade.identificacao')->label('Unidade')->searchable(),
+            TextColumn::make('unidade.projeto.nome')->label('Empreendimento')->searchable(),
+            TextColumn::make('cliente.nome')->label('Cliente')->searchable()->sortable(),
+            TextColumn::make('valor_venda')->label('Valor')->money('BRL')->sortable(),
+            TextColumn::make('data_contrato')->label('Data')->date('d/m/Y')->sortable(),
+            TextColumn::make('status')->label('Status')->badge()
+                ->colors(['success' => 'ativo', 'warning' => 'distratado', 'danger' => 'cancelado'])
+                ->formatStateUsing(fn ($state) => match($state) { 'ativo' => 'Ativo', 'distratado' => 'Distratado', 'cancelado' => 'Cancelado', default => $state }),
+        ];
+    }
+    protected static function getGridTableColumns(): array
+    {
+        return [
+            Stack::make([
+                Split::make([
+                    TextColumn::make('numero')->label('Número')->searchable()->sortable()->weight('medium'),
+                    TextColumn::make('status')->label('Status')->badge()
+                        ->colors(['success' => 'ativo', 'warning' => 'distratado', 'danger' => 'cancelado'])
+                        ->formatStateUsing(fn ($state) => match($state) { 'ativo' => 'Ativo', 'distratado' => 'Distratado', 'cancelado' => 'Cancelado', default => $state })
+                        ->grow(false),
+                ]),
+                Split::make([
+                    TextColumn::make('unidade.identificacao')->label('Unidade')->description('Unidade', position: 'above')->searchable(),
+                    TextColumn::make('unidade.projeto.nome')->label('Empreendimento')->description('Empreendimento', position: 'above')->searchable(),
+                ]),
+                TextColumn::make('cliente.nome')->label('Cliente')->description('Cliente', position: 'above')->searchable(),
+                Split::make([
+                    TextColumn::make('valor_venda')->label('Valor')->description('Valor', position: 'above')->money('BRL'),
+                    TextColumn::make('data_contrato')->label('Data')->description('Data', position: 'above')->date('d/m/Y'),
+                ]),
+            ])->space(3)->extraAttributes(['class' => 'pb-2']),
+        ];
     }
     public static function getPages(): array
     {
