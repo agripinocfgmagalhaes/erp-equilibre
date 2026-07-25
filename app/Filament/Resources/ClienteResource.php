@@ -8,6 +8,8 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\Layout\Stack;
+use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Actions\ImportAction;
 use Filament\Actions\EditAction;
@@ -68,19 +70,44 @@ class ClienteResource extends Resource
     }
     public static function table(Table $table): Table
     {
-        return $table->columns([
+        /** @var \Hydrat\TableLayoutToggle\Concerns\HasToggleableTable $livewire */
+        $livewire = $table->getLivewire();
+        return $table
+            ->columns($livewire->isGridLayout() ? static::getGridTableColumns() : static::getListTableColumns())
+            ->contentGrid(fn () => $livewire->isListLayout() ? null : ['md' => 2, 'lg' => 3])
+            ->filters([TernaryFilter::make('ativo')->trueLabel('Ativos')->falseLabel('Inativos')])
+            ->headerActions([ImportAction::make()->importer(ClienteImporter::class)->label('Importar Planilha')])
+            ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
+            ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
+            ->defaultSort('nome')->striped();
+    }
+    protected static function getListTableColumns(): array
+    {
+        return [
             TextColumn::make('nome')->label('Nome')->searchable()->sortable()->weight('medium'),
             TextColumn::make('cpf')->label('CPF')->searchable()->placeholder('—'),
             TextColumn::make('whatsapp')->label('WhatsApp')->placeholder('—'),
             TextColumn::make('email')->label('E-mail')->searchable()->placeholder('—'),
             TextColumn::make('estado_civil')->label('Estado Civil')->formatStateUsing(fn ($state) => Cliente::ESTADOS_CIVIS[$state] ?? '—')->placeholder('—'),
             IconColumn::make('ativo')->label('Ativo')->boolean(),
-        ])
-        ->filters([TernaryFilter::make('ativo')->trueLabel('Ativos')->falseLabel('Inativos')])
-        ->headerActions([ImportAction::make()->importer(ClienteImporter::class)->label('Importar Planilha')])
-        ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
-        ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('nome')->striped();
+        ];
+    }
+    protected static function getGridTableColumns(): array
+    {
+        return [
+            Stack::make([
+                Split::make([
+                    TextColumn::make('nome')->label('Nome')->searchable()->sortable()->weight('medium'),
+                    IconColumn::make('ativo')->label('Ativo')->boolean()->grow(false),
+                ]),
+                Split::make([
+                    TextColumn::make('cpf')->label('CPF')->description('CPF', position: 'above')->searchable()->placeholder('—'),
+                    TextColumn::make('whatsapp')->label('WhatsApp')->description('WhatsApp', position: 'above')->placeholder('—'),
+                ]),
+                TextColumn::make('email')->label('E-mail')->description('E-mail', position: 'above')->searchable()->placeholder('—'),
+                TextColumn::make('estado_civil')->label('Estado Civil')->description('Estado Civil', position: 'above')->formatStateUsing(fn ($state) => Cliente::ESTADOS_CIVIS[$state] ?? '—')->placeholder('—'),
+            ])->space(3)->extraAttributes(['class' => 'pb-2']),
+        ];
     }
     public static function getPages(): array
     {
