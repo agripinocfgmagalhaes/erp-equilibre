@@ -69,7 +69,7 @@ class CotacoesRelationManager extends RelationManager
                 CreateAction::make()
                     ->label('+ Registrar Cotação')
                     ->slideOver()->modalWidth('4xl')
-                    ->visible(fn () => $this->getOwnerRecord()->podeReceberCotacao())
+                    ->visible(true)
                     ->modalDescription(fn () => sprintf('%d de %d cotações registradas.', $this->getOwnerRecord()->cotacoes()->count(), RequisicaoCompra::MAX_COTACOES)),
             ])
             ->recordActions([
