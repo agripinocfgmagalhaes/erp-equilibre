@@ -8,6 +8,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\Layout\Stack;
+use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Radio;
@@ -100,16 +102,11 @@ class RequisicaoCompraResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->columns([
-            TextColumn::make('numero')->label('Número')->searchable()->sortable()->weight('medium'),
-            TextColumn::make('projeto.nome')->label('Empreendimento')->placeholder('—'),
-            TextColumn::make('solicitante.name')->label('Encarregado')->searchable(),
-            TextColumn::make('status')->label('Status')->badge()
-                ->colors(self::STATUS_COLORS)
-                ->formatStateUsing(fn ($state) => self::STATUS_LABELS[$state] ?? $state),
-            TextColumn::make('cotacoes_count')->label('Cotações')->counts('cotacoes')->badge()->color('gray'),
-            TextColumn::make('data_requisicao')->label('Data')->date('d/m/Y')->sortable(),
-        ])
+        /** @var \Hydrat\TableLayoutToggle\Concerns\HasToggleableTable $livewire */
+        $livewire = $table->getLivewire();
+        return $table
+        ->columns($livewire->isGridLayout() ? static::getGridTableColumns() : static::getListTableColumns())
+        ->contentGrid(fn () => $livewire->isListLayout() ? null : ['md' => 2, 'lg' => 3])
         ->filters([
             SelectFilter::make('status')->options(self::STATUS_LABELS),
             SelectFilter::make('projeto_id')->label('Empreendimento')->options(Projeto::pluck('nome', 'id'))->searchable(),
@@ -159,6 +156,41 @@ class RequisicaoCompraResource extends Resource
         ])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
         ->defaultSort('created_at', 'desc')->striped();
+    }
+
+    protected static function getListTableColumns(): array
+    {
+        return [
+            TextColumn::make('numero')->label('Número')->searchable()->sortable()->weight('medium'),
+            TextColumn::make('projeto.nome')->label('Empreendimento')->placeholder('—'),
+            TextColumn::make('solicitante.name')->label('Encarregado')->searchable(),
+            TextColumn::make('status')->label('Status')->badge()
+                ->colors(self::STATUS_COLORS)
+                ->formatStateUsing(fn ($state) => self::STATUS_LABELS[$state] ?? $state),
+            TextColumn::make('cotacoes_count')->label('Cotações')->counts('cotacoes')->badge()->color('gray'),
+            TextColumn::make('data_requisicao')->label('Data')->date('d/m/Y')->sortable(),
+        ];
+    }
+
+    protected static function getGridTableColumns(): array
+    {
+        return [
+            Stack::make([
+                Split::make([
+                    TextColumn::make('numero')->label('Número')->searchable()->sortable()->weight('medium'),
+                    TextColumn::make('status')->label('Status')->badge()
+                        ->colors(self::STATUS_COLORS)
+                        ->formatStateUsing(fn ($state) => self::STATUS_LABELS[$state] ?? $state)
+                        ->grow(false),
+                ]),
+                TextColumn::make('projeto.nome')->label('Empreendimento')->description('Empreendimento', position: 'above')->placeholder('—'),
+                Split::make([
+                    TextColumn::make('solicitante.name')->label('Encarregado')->description('Encarregado', position: 'above')->searchable(),
+                    TextColumn::make('data_requisicao')->label('Data')->description('Data', position: 'above')->date('d/m/Y'),
+                    TextColumn::make('cotacoes_count')->label('Cotações')->description('Cotações', position: 'above')->counts('cotacoes')->badge()->color('gray')->grow(false),
+                ]),
+            ])->space(3)->extraAttributes(['class' => 'pb-2']),
+        ];
     }
 
     public static function getRelations(): array
