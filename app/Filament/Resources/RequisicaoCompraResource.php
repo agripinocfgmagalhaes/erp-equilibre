@@ -7,6 +7,8 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Repeater\TableColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Actions\Action;
@@ -31,8 +33,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
-use Awcodes\TableRepeater\Components\TableRepeater;
-use Awcodes\TableRepeater\Header;
 
 class RequisicaoCompraResource extends Resource
 {
@@ -72,10 +72,15 @@ class RequisicaoCompraResource extends Resource
                 Select::make('fase_obra_id')->label('Fase da Obra')->options(fn (callable $get) => FaseObra::where('projeto_id', $get('projeto_id'))->pluck('nome', 'id'))->searchable()->native(false)->nullable()->disabled(fn (callable $get) => ! $get('projeto_id')),
                 DatePicker::make('data_requisicao')->label('Data')->native(false)->displayFormat('d/m/Y')->default(now())->required(),
                 Textarea::make('justificativa')->label('Justificativa')->rows(2)->columnSpanFull(),
-            ])->columns(3)->disabled(fn (?RequisicaoCompra $record) => $record && $record->status !== 'rascunho'),
+            ])->columns(3)->columnSpanFull()->disabled(fn (?RequisicaoCompra $record) => $record && $record->status !== 'rascunho'),
             Section::make('Itens Solicitados')->schema([
-                TableRepeater::make('itens')->relationship()->label('')
-                    ->headers([Header::make('Produto')->width('220px'), Header::make('Descrição')->width('220px'), Header::make('Unid.')->width('90px'), Header::make('Qtd.')->width('100px')])
+                Repeater::make('itens')->relationship()->label('')
+                    ->table([
+                        TableColumn::make('Produto'),
+                        TableColumn::make('Descrição'),
+                        TableColumn::make('Unid.'),
+                        TableColumn::make('Qtd.'),
+                    ])
                     ->schema([
                         Select::make('produto_id')->label('Produto')
                             ->options(Produto::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->nullable()
@@ -94,7 +99,7 @@ class RequisicaoCompraResource extends Resource
                         TextInput::make('quantidade')->label('Qtd.')->numeric()->step(0.01)->default(1)->required(),
                     ])
                     ->addActionLabel('+ Adicionar Item')->columnSpanFull()->defaultItems(1),
-            ])->disabled(fn (?RequisicaoCompra $record) => $record && $record->status !== 'rascunho'),
+            ])->columnSpanFull()->disabled(fn (?RequisicaoCompra $record) => $record && $record->status !== 'rascunho'),
         ]);
     }
 
