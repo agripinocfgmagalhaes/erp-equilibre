@@ -59,6 +59,6 @@ class CorretorResource extends Resource
     }
     public static function getPages(): array
     {
-        return ['index' => ListCorretores::route('/'), 'create' => CreateCorretor::route('/create'), 'edit' => EditCorretor::route('/{record}/edit')];
+        return ['index' => ListCorretores::route('/')];
     }
 }

@@ -58,6 +58,6 @@ class ProdutoResource extends Resource
     }
     public static function getPages(): array
     {
-        return ['index' => ListProdutos::route('/'), 'create' => CreateProduto::route('/create'), 'edit' => EditProduto::route('/{record}/edit')];
+        return ['index' => ListProdutos::route('/')];
     }
 }

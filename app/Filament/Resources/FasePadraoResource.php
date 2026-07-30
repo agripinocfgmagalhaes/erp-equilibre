@@ -22,6 +22,7 @@ class FasePadraoResource extends Resource
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-queue-list';
     protected static ?string $navigationLabel = 'Fases Padrão';
     protected static string | \UnitEnum | null $navigationGroup = 'Configurações';
+    protected static bool $shouldRegisterNavigation = false;
     protected static ?int $navigationSort = 4;
     protected static ?string $slug = 'fases-padrao';
     public static function form(Schema $schema): Schema
@@ -45,6 +46,6 @@ class FasePadraoResource extends Resource
     }
     public static function getPages(): array
     {
-        return ['index' => ListFasesPadrao::route('/'), 'create' => CreateFasePadrao::route('/create'), 'edit' => EditFasePadrao::route('/{record}/edit')];
+        return ['index' => ListFasesPadrao::route('/')];
     }
 }

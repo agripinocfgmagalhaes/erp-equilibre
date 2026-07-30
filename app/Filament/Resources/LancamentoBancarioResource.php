@@ -107,6 +107,6 @@ class LancamentoBancarioResource extends Resource
     }
     public static function getPages(): array
     {
-        return ['index' => ListLancamentosBancarios::route('/'), 'create' => CreateLancamentoBancario::route('/create'), 'edit' => EditLancamentoBancario::route('/{record}/edit')];
+        return ['index' => ListLancamentosBancarios::route('/')];
     }
 }

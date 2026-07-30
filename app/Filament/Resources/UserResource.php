@@ -1,0 +1,74 @@
+<?php
+namespace App\Filament\Resources;
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Resources\UserResource\Pages\ListUsers;
+use App\Filament\Resources\UserResource\Pages;
+use App\Models\User;
+use Filament\Forms;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+class UserResource extends Resource
+{
+    protected static ?string $model = User::class;
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-user-group';
+    protected static ?string $navigationLabel = 'Usuários';
+    protected static string | \UnitEnum | null $navigationGroup = 'Configurações';
+    protected static bool $shouldRegisterNavigation = false;
+    protected static ?int $navigationSort = 10;
+    protected static ?string $slug = 'usuarios';
+    public static function form(Schema $schema): Schema
+    {
+        return $schema->components([
+            TextInput::make('name')->label('Nome')->required()->maxLength(150),
+            TextInput::make('email')->label('E-mail')->email()->required()->maxLength(150)->unique(ignoreRecord: true),
+            TextInput::make('password')->label('Senha')->password()->revealable()->maxLength(255)
+                ->required(fn (string $operation) => $operation === 'create')
+                ->dehydrated(fn ($state) => filled($state))
+                ->dehydrateStateUsing(fn ($state) => filled($state) ? $state : null)
+                ->helperText(fn (string $operation) => $operation === 'edit' ? 'Deixe em branco para manter a senha atual.' : null),
+            CheckboxList::make('roles')->label('Perfis de Acesso')->relationship('roles', 'name')
+                ->options(fn () => \Spatie\Permission\Models\Role::pluck('name', 'id'))
+                ->columns(2)->columnSpanFull(),
+        ])->columns(2);
+    }
+    public static function table(Table $table): Table
+    {
+        return $table->columns([
+            TextColumn::make('name')->label('Nome')->searchable()->sortable()->weight('medium'),
+            TextColumn::make('email')->label('E-mail')->searchable(),
+            TextColumn::make('roles.name')->label('Perfis de Acesso')->badge()->separator(',')->placeholder('—'),
+            TextColumn::make('created_at')->label('Criado em')->dateTime('d/m/Y H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),
+        ])
+        ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
+        ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
+        ->defaultSort('name')->striped();
+    }
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->hasRole('admin') ?? false;
+    }
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->hasRole('admin') ?? false;
+    }
+    public static function canEdit($record): bool
+    {
+        return auth()->user()?->hasRole('admin') ?? false;
+    }
+    public static function canDelete($record): bool
+    {
+        return auth()->user()?->hasRole('admin') ?? false;
+    }
+    public static function getPages(): array
+    {
+        return ['index' => ListUsers::route('/')];
+    }
+}

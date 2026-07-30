@@ -64,6 +64,42 @@ class RequisicaoCompra extends Model
             && $this->cotacoes()->count() < self::MAX_COTACOES;
     }
 
+    public function gerarPedidoDireto(int $fornecedorId, array $itensPrecos, ?int $prazoEntregaDias = null): PedidoCompra
+    {
+        $pedido = PedidoCompra::create([
+            'numero' => PedidoCompra::gerarNumero(),
+            'requisicao_compra_id' => $this->id,
+            'cotacao_compra_id' => null,
+            'projeto_id' => $this->projeto_id,
+            'fase_obra_id' => $this->fase_obra_id,
+            'fornecedor_id' => $fornecedorId,
+            'status' => 'aprovado',
+            'data_pedido' => now(),
+            'data_previsao_entrega' => $prazoEntregaDias ? now()->addDays($prazoEntregaDias) : null,
+            'observacoes' => 'Gerado diretamente da Requisição '.$this->numero.' (sem cotação).',
+        ]);
+
+        foreach ($itensPrecos as $itemId => $valorUnitario) {
+            $itemReq = $this->itens()->find($itemId);
+            if (! $itemReq) {
+                continue;
+            }
+            ItemPedidoCompra::create([
+                'pedido_compra_id' => $pedido->id,
+                'produto_id' => $itemReq->produto_id,
+                'descricao' => $itemReq->descricao,
+                'unidade' => $itemReq->unidade ?? 'UN',
+                'quantidade' => $itemReq->quantidade ?? 1,
+                'valor_unitario' => $valorUnitario,
+            ]);
+        }
+
+        $pedido->recalcularTotal();
+        $this->update(['status' => 'pedido_gerado']);
+
+        return $pedido;
+    }
+
     public function selecionarVencedoraEGerarPedido(CotacaoCompra $cotacao): PedidoCompra
     {
         $this->cotacoes()->update(['vencedora' => false]);

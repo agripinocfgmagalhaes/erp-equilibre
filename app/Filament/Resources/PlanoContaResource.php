@@ -26,6 +26,7 @@ class PlanoContaResource extends Resource
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $navigationLabel = 'Plano de Contas';
     protected static string | \UnitEnum | null $navigationGroup = 'Configurações';
+    protected static bool $shouldRegisterNavigation = false;
     protected static ?int $navigationSort = 3;
     protected static ?string $slug = 'plano-contas';
     public static function form(Schema $schema): Schema
@@ -54,6 +55,6 @@ class PlanoContaResource extends Resource
     }
     public static function getPages(): array
     {
-        return ['index' => ListPlanoContas::route('/'), 'create' => CreatePlanoConta::route('/create'), 'edit' => EditPlanoConta::route('/{record}/edit')];
+        return ['index' => ListPlanoContas::route('/')];
     }
 }

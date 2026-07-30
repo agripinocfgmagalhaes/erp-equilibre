@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "defa30f5056b8ce473893a6d45702d5e",
+    "content-hash": "f652c4c9a12a1bd0148f0489e479aa80",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -128,16 +128,16 @@
         },
         {
             "name": "bezhansalleh/filament-plugin-essentials",
-            "version": "1.2.1",
+            "version": "1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bezhanSalleh/filament-plugin-essentials.git",
-                "reference": "de3a8a07edcf1bc9fe829480ae09aa00265e7f03"
+                "reference": "3ccec939e6e3fb51ce08cacf73c3cc3d3f59640c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bezhanSalleh/filament-plugin-essentials/zipball/de3a8a07edcf1bc9fe829480ae09aa00265e7f03",
-                "reference": "de3a8a07edcf1bc9fe829480ae09aa00265e7f03",
+                "url": "https://api.github.com/repos/bezhanSalleh/filament-plugin-essentials/zipball/3ccec939e6e3fb51ce08cacf73c3cc3d3f59640c",
+                "reference": "3ccec939e6e3fb51ce08cacf73c3cc3d3f59640c",
                 "shasum": ""
             },
             "require": {
@@ -194,7 +194,7 @@
             ],
             "support": {
                 "issues": "https://github.com/bezhanSalleh/filament-plugin-essentials/issues",
-                "source": "https://github.com/bezhanSalleh/filament-plugin-essentials/tree/1.2.1"
+                "source": "https://github.com/bezhanSalleh/filament-plugin-essentials/tree/1.3.0"
             },
             "funding": [
                 {
@@ -202,20 +202,20 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-03-22T08:15:32+00:00"
+            "time": "2026-07-25T02:30:23+00:00"
         },
         {
             "name": "bezhansalleh/filament-shield",
-            "version": "4.2.0",
+            "version": "4.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bezhanSalleh/filament-shield.git",
-                "reference": "a48ea9ca115c644ce40380b853142afcd65e38d1"
+                "reference": "1ff51f53985275f5bd37e9277cf810d391e7c3ca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bezhanSalleh/filament-shield/zipball/a48ea9ca115c644ce40380b853142afcd65e38d1",
-                "reference": "a48ea9ca115c644ce40380b853142afcd65e38d1",
+                "url": "https://api.github.com/repos/bezhanSalleh/filament-shield/zipball/1ff51f53985275f5bd37e9277cf810d391e7c3ca",
+                "reference": "1ff51f53985275f5bd37e9277cf810d391e7c3ca",
                 "shasum": ""
             },
             "require": {
@@ -225,7 +225,7 @@
                 "illuminate/support": "^11.28|^12.0|^13.0",
                 "php": "^8.2|^8.3",
                 "spatie/laravel-package-tools": "^1.0",
-                "spatie/laravel-permission": "^6.0|^7.0"
+                "spatie/laravel-permission": "^6.0|^7.0|^8.0"
             },
             "require-dev": {
                 "larastan/larastan": "^3.0",
@@ -289,7 +289,7 @@
             ],
             "support": {
                 "issues": "https://github.com/bezhanSalleh/filament-shield/issues",
-                "source": "https://github.com/bezhanSalleh/filament-shield/tree/4.2.0"
+                "source": "https://github.com/bezhanSalleh/filament-shield/tree/4.3.1"
             },
             "funding": [
                 {
@@ -297,7 +297,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-03-22T08:31:44+00:00"
+            "time": "2026-07-25T03:31:26+00:00"
         },
         {
             "name": "blade-ui-kit/blade-heroicons",
@@ -2353,17 +2353,96 @@
             "time": "2026-07-17T13:53:03+00:00"
         },
         {
-            "name": "jeffgreco13/filament-breezy",
-            "version": "v3.2.6",
+            "name": "hydrat/filament-table-layout-toggle",
+            "version": "v4.1.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/Jacobtims/filament-breezy.git",
-                "reference": "a67b50dbed871fd259ac8954462a1e8e512a413a"
+                "url": "https://github.com/Hydrat-Agency/filament-table-layout-toggle.git",
+                "reference": "3599fbdd7e2e5169399662cf987d599f6f8163ee"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Jacobtims/filament-breezy/zipball/a67b50dbed871fd259ac8954462a1e8e512a413a",
-                "reference": "a67b50dbed871fd259ac8954462a1e8e512a413a",
+                "url": "https://api.github.com/repos/Hydrat-Agency/filament-table-layout-toggle/zipball/3599fbdd7e2e5169399662cf987d599f6f8163ee",
+                "reference": "3599fbdd7e2e5169399662cf987d599f6f8163ee",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^4.2|^5.0",
+                "illuminate/contracts": "^11.0|^12.0|^13.0",
+                "php": "^8.2",
+                "spatie/laravel-package-tools": "^1.15.0"
+            },
+            "require-dev": {
+                "nunomaduro/collision": "^8.0",
+                "nunomaduro/larastan": "^2.0.1",
+                "orchestra/testbench": "^9.0",
+                "pestphp/pest": "^3.0|^4.0",
+                "pestphp/pest-plugin-arch": "^3.0|^4.0",
+                "pestphp/pest-plugin-laravel": "^3.0|^4.0",
+                "phpstan/extension-installer": "^1.1",
+                "phpstan/phpstan-deprecation-rules": "^1.0",
+                "phpstan/phpstan-phpunit": "^1.0",
+                "spatie/laravel-ray": "^1.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "TableLayoutToggle": "Hydrat\\TableLayoutToggle\\Facades\\TableLayoutToggle"
+                    },
+                    "providers": [
+                        "Hydrat\\TableLayoutToggle\\TableLayoutToggleServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Hydrat\\TableLayoutToggle\\": "src/",
+                    "Hydrat\\TableLayoutToggle\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Thomas",
+                    "email": "thomas@hydrat.agency",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Filament plugin adding a toggle button to tables, allowing user to switch between Grid and Table layouts.",
+            "homepage": "https://github.com/hydrat/filament-table-layout-toggle",
+            "keywords": [
+                "Hydrat",
+                "filament-table-layout-toggle",
+                "laravel"
+            ],
+            "support": {
+                "issues": "https://github.com/hydrat/filament-table-layout-toggle/issues",
+                "source": "https://github.com/hydrat/filament-table-layout-toggle"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/Hydrat",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-04-05T10:38:18+00:00"
+        },
+        {
+            "name": "jeffgreco13/filament-breezy",
+            "version": "v3.2.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Jacobtims/filament-breezy.git",
+                "reference": "dd975eaa06cefb91c1178160bf4004b753c3f543"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Jacobtims/filament-breezy/zipball/dd975eaa06cefb91c1178160bf4004b753c3f543",
+                "reference": "dd975eaa06cefb91c1178160bf4004b753c3f543",
                 "shasum": ""
             },
             "require": {
@@ -2429,22 +2508,22 @@
             ],
             "support": {
                 "issues": "https://github.com/Jacobtims/filament-breezy/issues",
-                "source": "https://github.com/Jacobtims/filament-breezy/tree/v3.2.6"
+                "source": "https://github.com/Jacobtims/filament-breezy/tree/v3.2.7"
             },
-            "time": "2026-07-14T10:38:52+00:00"
+            "time": "2026-07-25T07:56:11+00:00"
         },
         {
             "name": "kirschbaum-development/eloquent-power-joins",
-            "version": "4.3.2",
+            "version": "4.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/kirschbaum-development/eloquent-power-joins.git",
-                "reference": "33c189bd51a510c1ceba67222395ead08a29863a"
+                "reference": "c609dbbe4ad2051b667e937f1ab554067519d64b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kirschbaum-development/eloquent-power-joins/zipball/33c189bd51a510c1ceba67222395ead08a29863a",
-                "reference": "33c189bd51a510c1ceba67222395ead08a29863a",
+                "url": "https://api.github.com/repos/kirschbaum-development/eloquent-power-joins/zipball/c609dbbe4ad2051b667e937f1ab554067519d64b",
+                "reference": "c609dbbe4ad2051b667e937f1ab554067519d64b",
                 "shasum": ""
             },
             "require": {
@@ -2492,22 +2571,22 @@
             ],
             "support": {
                 "issues": "https://github.com/kirschbaum-development/eloquent-power-joins/issues",
-                "source": "https://github.com/kirschbaum-development/eloquent-power-joins/tree/4.3.2"
+                "source": "https://github.com/kirschbaum-development/eloquent-power-joins/tree/4.3.3"
             },
-            "time": "2026-05-28T20:35:55+00:00"
+            "time": "2026-07-23T11:41:37+00:00"
         },
         {
             "name": "laravel/framework",
-            "version": "v13.21.1",
+            "version": "v13.22.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "303b5f8dc899f89e8c38c350b639b8fbd193ed16"
+                "reference": "d354afa45334cdac523fbc015f203a78d7e2f5c6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/303b5f8dc899f89e8c38c350b639b8fbd193ed16",
-                "reference": "303b5f8dc899f89e8c38c350b639b8fbd193ed16",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/d354afa45334cdac523fbc015f203a78d7e2f5c6",
+                "reference": "d354afa45334cdac523fbc015f203a78d7e2f5c6",
                 "shasum": ""
             },
             "require": {
@@ -2721,7 +2800,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2026-07-21T14:27:35+00:00"
+            "time": "2026-07-24T20:38:48+00:00"
         },
         {
             "name": "laravel/prompts",
@@ -10511,23 +10590,23 @@
         },
         {
             "name": "nunomaduro/collision",
-            "version": "v8.9.4",
+            "version": "v8.9.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nunomaduro/collision.git",
-                "reference": "716af8f95a470e9094cfca09ed897b023be191a5"
+                "reference": "fb53eacd509a1d303858e2d20cfebf2d630254ec"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nunomaduro/collision/zipball/716af8f95a470e9094cfca09ed897b023be191a5",
-                "reference": "716af8f95a470e9094cfca09ed897b023be191a5",
+                "url": "https://api.github.com/repos/nunomaduro/collision/zipball/fb53eacd509a1d303858e2d20cfebf2d630254ec",
+                "reference": "fb53eacd509a1d303858e2d20cfebf2d630254ec",
                 "shasum": ""
             },
             "require": {
                 "filp/whoops": "^2.18.4",
                 "nunomaduro/termwind": "^2.4.0",
                 "php": "^8.2.0",
-                "symfony/console": "^7.4.8 || ^8.0.8"
+                "symfony/console": "^7.4.14 || ^8.1.1"
             },
             "conflict": {
                 "laravel/framework": "<11.48.0 || >=14.0.0",
@@ -10535,12 +10614,12 @@
             },
             "require-dev": {
                 "brianium/paratest": "^7.8.5",
-                "larastan/larastan": "^3.9.6",
-                "laravel/framework": "^11.48.0 || ^12.56.0 || ^13.5.0",
-                "laravel/pint": "^1.29.1",
-                "orchestra/testbench-core": "^9.12.0 || ^10.12.1 || ^11.2.1",
-                "pestphp/pest": "^3.8.5 || ^4.4.3 || ^5.0.0",
-                "sebastian/environment": "^7.2.1 || ^8.0.4 || ^9.3.0"
+                "larastan/larastan": "^3.10.0",
+                "laravel/framework": "^11.48.0 || ^12.56.0 || ^13.20.0",
+                "laravel/pint": "^1.29.3",
+                "orchestra/testbench-core": "^9.12.0 || ^10.12.1 || ^11.3.5",
+                "pestphp/pest": "^3.8.5 || ^4.7.5 || ^5.0.0",
+                "sebastian/environment": "^7.2.1 || ^8.1.2 || ^9.3.2"
             },
             "type": "library",
             "extra": {
@@ -10603,7 +10682,7 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2026-04-21T14:04:20+00:00"
+            "time": "2026-07-15T19:09:14+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -11134,16 +11213,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "12.5.31",
+            "version": "12.5.32",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "0608d157a284f15cc73b99a3327eff06b66a176d"
+                "reference": "c02591dd7840ed124a98d7770753329ad28e9f8f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/0608d157a284f15cc73b99a3327eff06b66a176d",
-                "reference": "0608d157a284f15cc73b99a3327eff06b66a176d",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/c02591dd7840ed124a98d7770753329ad28e9f8f",
+                "reference": "c02591dd7840ed124a98d7770753329ad28e9f8f",
                 "shasum": ""
             },
             "require": {
@@ -11212,7 +11291,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/12.5.31"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/12.5.32"
             },
             "funding": [
                 {
@@ -11220,7 +11299,7 @@
                     "type": "other"
                 }
             ],
-            "time": "2026-07-06T14:54:16+00:00"
+            "time": "2026-07-25T06:54:13+00:00"
         },
         {
             "name": "rector/rector",

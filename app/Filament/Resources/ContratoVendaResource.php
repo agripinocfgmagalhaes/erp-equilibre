@@ -60,7 +60,7 @@ class ContratoVendaResource extends Resource
                 Select::make('status')->label('Status')->native(false)->default('ativo')->options(['ativo' => 'Ativo', 'distratado' => 'Distratado', 'cancelado' => 'Cancelado']),
                 DatePicker::make('data_contrato')->label('Data do Contrato')->native(false)->displayFormat('d/m/Y')->default(now())->required(),
                 DatePicker::make('data_entrega_prevista')->label('Previsão de Entrega')->native(false)->displayFormat('d/m/Y'),
-            ])->columns(2),
+            ])->columns(2)->columnSpanFull(),
             Section::make('Partes')->schema([
                 Select::make('unidade_id')->label('Unidade')
                     ->options(function ($record) {
@@ -73,7 +73,7 @@ class ContratoVendaResource extends Resource
                 Hidden::make('projeto_id'),
                 Select::make('cliente_id')->label('Cliente')->options(Cliente::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->required(),
                 Select::make('corretor_id')->label('Corretor')->options(Corretor::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->nullable(),
-            ])->columns(2),
+            ])->columns(2)->columnSpanFull(),
             Section::make('Composição do Valor')->schema([
                 TextInput::make('valor_venda')->label('Valor Total de Venda')->numeric()->prefix('R$')->step(0.01)->required()->live(onBlur: true)
                     ->afterStateUpdated(function (callable $set, callable $get, $state) { $set('valor_comissao', round((float)$state * 4.5 / 100, 2)); static::recalcParcelamento($set, $get); }),
@@ -82,14 +82,14 @@ class ContratoVendaResource extends Resource
                 TextInput::make('valor_fgts')->label('FGTS')->numeric()->prefix('R$')->step(0.01)->default(0)->live(onBlur: true)->afterStateUpdated(fn (callable $set, callable $get) => static::recalcParcelamento($set, $get)),
                 TextInput::make('valor_subsidio')->label('Subsídio')->numeric()->prefix('R$')->step(0.01)->default(0)->live(onBlur: true)->afterStateUpdated(fn (callable $set, callable $get) => static::recalcParcelamento($set, $get)),
                 TextInput::make('valor_financiamento')->label('Financiamento Bancário')->numeric()->prefix('R$')->step(0.01)->default(0)->live(onBlur: true)->afterStateUpdated(fn (callable $set, callable $get) => static::recalcParcelamento($set, $get)),
-            ])->columns(3),
+            ])->columns(3)->columnSpanFull(),
             Section::make('Parcelamento Direto')->schema([
                 TextInput::make('valor_parcelamento')->label('Valor Total do Parcelamento')->numeric()->prefix('R$')->step(0.01)->default(0)->readOnly(),
                 TextInput::make('qtd_parcelas')->label('Nº de Parcelas')->numeric()->default(0)->minValue(0)->live(onBlur: true)->afterStateUpdated(fn (callable $set, callable $get) => static::recalcParcelamento($set, $get)),
                 TextInput::make('taxa_juros')->label('Taxa de Juros (% a.m.)')->numeric()->suffix('% a.m.')->step(0.001)->default(1.200)->live(onBlur: true)->afterStateUpdated(fn (callable $set, callable $get) => static::recalcParcelamento($set, $get)),
                 TextInput::make('valor_parcela')->label('Valor da Parcela (PMT)')->numeric()->prefix('R$')->step(0.01)->readOnly(),
                 Textarea::make('observacoes')->label('Observações')->rows(2)->columnSpanFull(),
-            ])->columns(2),
+            ])->columns(2)->columnSpanFull(),
         ]);
     }
     public static function table(Table $table): Table
@@ -178,6 +178,6 @@ class ContratoVendaResource extends Resource
     }
     public static function getPages(): array
     {
-        return ['index' => ListContratosVenda::route('/'), 'create' => CreateContratoVenda::route('/create'), 'edit' => EditContratoVenda::route('/{record}/edit')];
+        return ['index' => ListContratosVenda::route('/')];
     }
 }
