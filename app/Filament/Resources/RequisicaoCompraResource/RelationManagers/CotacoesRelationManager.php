@@ -30,6 +30,11 @@ class CotacoesRelationManager extends RelationManager
         return in_array($ownerRecord->status, ['em_cotacao', 'cotada', 'pedido_gerado']);
     }
 
+    public function isReadOnly(): bool
+    {
+        return false;
+    }
+
     public function form(Schema $schema): Schema
     {
         /** @var RequisicaoCompra $requisicao */
@@ -45,10 +50,12 @@ class CotacoesRelationManager extends RelationManager
             Repeater::make('itens')->relationship()->label('Preços por Item')
                 ->schema([
                     Select::make('item_requisicao_compra_id')->label('Item')
-                        ->options($requisicao->itens->pluck('descricao', 'id'))->required()->native(false),
+                        ->options($requisicao->itens->pluck('descricao', 'id'))->required()->native(false)
+                        ->disabled()->dehydrated(true),
                     TextInput::make('valor_unitario')->label('Valor Unitário')->numeric()->prefix('R$')->step(0.01)->default(0)->required(),
                 ])
-                ->columns(2)->defaultItems(0)->addActionLabel('+ Adicionar Preço')->columnSpanFull(),
+                ->default($requisicao->itens->map(fn ($item) => ['item_requisicao_compra_id' => $item->id, 'valor_unitario' => 0])->toArray())
+                ->columns(2)->addable(false)->deletable(false)->reorderable(false)->columnSpanFull(),
             Textarea::make('observacoes')->label('Observações')->rows(2)->columnSpanFull(),
         ])->columns(2);
     }

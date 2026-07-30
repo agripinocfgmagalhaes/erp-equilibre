@@ -7,5 +7,5 @@ use Filament\Resources\Pages\ListRecords;
 class ListProjetos extends ListRecords
 {
     protected static string $resource = ProjetoResource::class;
-    protected function getHeaderActions(): array { return [CreateAction::make()->label('+ Novo Empreendimento')]; }
+    protected function getHeaderActions(): array { return [CreateAction::make()->slideOver()->label('+ Novo Empreendimento')]; }
 }

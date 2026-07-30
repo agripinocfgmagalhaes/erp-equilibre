@@ -46,7 +46,7 @@ class ClienteResource extends Resource
                 TextInput::make('profissao')->label('Profissão')->maxLength(100),
                 TextInput::make('renda_familiar')->label('Renda Familiar')->numeric()->prefix('R$'),
                 Select::make('estado_civil')->label('Estado Civil')->options(Cliente::ESTADOS_CIVIS)->native(false)->live(),
-            ])->columns(2),
+            ])->columns(2)->columnSpanFull(),
             Section::make('Dados do Cônjuge')->schema([
                 TextInput::make('conjuge_nome')->label('Nome do Cônjuge')->maxLength(100),
                 TextInput::make('conjuge_cpf')->label('CPF do Cônjuge')->maxLength(14),
@@ -54,7 +54,7 @@ class ClienteResource extends Resource
                 TextInput::make('conjuge_email')->label('E-mail do Cônjuge')->email()->maxLength(100),
                 TextInput::make('conjuge_telefone')->label('Telefone do Cônjuge')->maxLength(20),
                 TextInput::make('conjuge_renda')->label('Renda do Cônjuge')->numeric()->prefix('R$'),
-            ])->columns(3)->visible(fn (callable $get) => in_array($get('estado_civil'), ['casado', 'uniao_estavel'])),
+            ])->columns(3)->columnSpanFull()->visible(fn (callable $get) => in_array($get('estado_civil'), ['casado', 'uniao_estavel'])),
             Section::make('Endereço')->schema([
                 TextInput::make('cep')->label('CEP')->maxLength(9),
                 TextInput::make('logradouro')->label('Logradouro')->maxLength(150)->columnSpan(2),
@@ -63,7 +63,7 @@ class ClienteResource extends Resource
                 TextInput::make('bairro')->label('Bairro')->maxLength(100),
                 TextInput::make('cidade')->label('Cidade')->maxLength(100),
                 TextInput::make('estado')->label('UF')->maxLength(2),
-            ])->columns(4),
+            ])->columns(4)->columnSpanFull(),
             Textarea::make('observacoes')->label('Observações')->rows(2)->columnSpanFull(),
             Toggle::make('ativo')->label('Ativo')->default(true),
         ]);
@@ -111,6 +111,6 @@ class ClienteResource extends Resource
     }
     public static function getPages(): array
     {
-        return ['index' => ListClientes::route('/'), 'create' => CreateCliente::route('/create'), 'edit' => EditCliente::route('/{record}/edit')];
+        return ['index' => ListClientes::route('/')];
     }
 }

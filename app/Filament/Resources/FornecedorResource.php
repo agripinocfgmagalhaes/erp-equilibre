@@ -59,6 +59,6 @@ class FornecedorResource extends Resource
     }
     public static function getPages(): array
     {
-        return ['index' => ListFornecedores::route('/'), 'create' => CreateFornecedor::route('/create'), 'edit' => EditFornecedor::route('/{record}/edit')];
+        return ['index' => ListFornecedores::route('/')];
     }
 }

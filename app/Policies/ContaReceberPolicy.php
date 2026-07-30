@@ -1,108 +1,75 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
-use App\Models\User;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\ContaReceber;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ContaReceberPolicy
 {
     use HandlesAuthorization;
-
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->can('view_any_conta::receber');
+        return $authUser->can('ViewAny:ContaReceber');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, ContaReceber $contaReceber): bool
+    public function view(AuthUser $authUser, ContaReceber $contaReceber): bool
     {
-        return $user->can('view_conta::receber');
+        return $authUser->can('View:ContaReceber');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->can('create_conta::receber');
+        return $authUser->can('Create:ContaReceber');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, ContaReceber $contaReceber): bool
+    public function update(AuthUser $authUser, ContaReceber $contaReceber): bool
     {
-        return $user->can('update_conta::receber');
+        return $authUser->can('Update:ContaReceber');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, ContaReceber $contaReceber): bool
+    public function delete(AuthUser $authUser, ContaReceber $contaReceber): bool
     {
-        return $user->can('delete_conta::receber');
+        return $authUser->can('Delete:ContaReceber');
     }
 
-    /**
-     * Determine whether the user can bulk delete.
-     */
-    public function deleteAny(User $user): bool
+    public function deleteAny(AuthUser $authUser): bool
     {
-        return $user->can('delete_any_conta::receber');
+        return $authUser->can('DeleteAny:ContaReceber');
     }
 
-    /**
-     * Determine whether the user can permanently delete.
-     */
-    public function forceDelete(User $user, ContaReceber $contaReceber): bool
+    public function restore(AuthUser $authUser, ContaReceber $contaReceber): bool
     {
-        return $user->can('force_delete_conta::receber');
+        return $authUser->can('Restore:ContaReceber');
     }
 
-    /**
-     * Determine whether the user can permanently bulk delete.
-     */
-    public function forceDeleteAny(User $user): bool
+    public function forceDelete(AuthUser $authUser, ContaReceber $contaReceber): bool
     {
-        return $user->can('force_delete_any_conta::receber');
+        return $authUser->can('ForceDelete:ContaReceber');
     }
 
-    /**
-     * Determine whether the user can restore.
-     */
-    public function restore(User $user, ContaReceber $contaReceber): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->can('restore_conta::receber');
+        return $authUser->can('ForceDeleteAny:ContaReceber');
     }
 
-    /**
-     * Determine whether the user can bulk restore.
-     */
-    public function restoreAny(User $user): bool
+    public function restoreAny(AuthUser $authUser): bool
     {
-        return $user->can('restore_any_conta::receber');
+        return $authUser->can('RestoreAny:ContaReceber');
     }
 
-    /**
-     * Determine whether the user can replicate.
-     */
-    public function replicate(User $user, ContaReceber $contaReceber): bool
+    public function replicate(AuthUser $authUser, ContaReceber $contaReceber): bool
     {
-        return $user->can('replicate_conta::receber');
+        return $authUser->can('Replicate:ContaReceber');
     }
 
-    /**
-     * Determine whether the user can reorder.
-     */
-    public function reorder(User $user): bool
+    public function reorder(AuthUser $authUser): bool
     {
-        return $user->can('reorder_conta::receber');
+        return $authUser->can('Reorder:ContaReceber');
     }
+
 }

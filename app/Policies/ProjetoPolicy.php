@@ -1,108 +1,75 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
-use App\Models\User;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Projeto;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProjetoPolicy
 {
     use HandlesAuthorization;
-
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->can('view_any_projeto');
+        return $authUser->can('ViewAny:Projeto');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Projeto $projeto): bool
+    public function view(AuthUser $authUser, Projeto $projeto): bool
     {
-        return $user->can('view_projeto');
+        return $authUser->can('View:Projeto');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->can('create_projeto');
+        return $authUser->can('Create:Projeto');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Projeto $projeto): bool
+    public function update(AuthUser $authUser, Projeto $projeto): bool
     {
-        return $user->can('update_projeto');
+        return $authUser->can('Update:Projeto');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Projeto $projeto): bool
+    public function delete(AuthUser $authUser, Projeto $projeto): bool
     {
-        return $user->can('delete_projeto');
+        return $authUser->can('Delete:Projeto');
     }
 
-    /**
-     * Determine whether the user can bulk delete.
-     */
-    public function deleteAny(User $user): bool
+    public function deleteAny(AuthUser $authUser): bool
     {
-        return $user->can('delete_any_projeto');
+        return $authUser->can('DeleteAny:Projeto');
     }
 
-    /**
-     * Determine whether the user can permanently delete.
-     */
-    public function forceDelete(User $user, Projeto $projeto): bool
+    public function restore(AuthUser $authUser, Projeto $projeto): bool
     {
-        return $user->can('force_delete_projeto');
+        return $authUser->can('Restore:Projeto');
     }
 
-    /**
-     * Determine whether the user can permanently bulk delete.
-     */
-    public function forceDeleteAny(User $user): bool
+    public function forceDelete(AuthUser $authUser, Projeto $projeto): bool
     {
-        return $user->can('force_delete_any_projeto');
+        return $authUser->can('ForceDelete:Projeto');
     }
 
-    /**
-     * Determine whether the user can restore.
-     */
-    public function restore(User $user, Projeto $projeto): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->can('restore_projeto');
+        return $authUser->can('ForceDeleteAny:Projeto');
     }
 
-    /**
-     * Determine whether the user can bulk restore.
-     */
-    public function restoreAny(User $user): bool
+    public function restoreAny(AuthUser $authUser): bool
     {
-        return $user->can('restore_any_projeto');
+        return $authUser->can('RestoreAny:Projeto');
     }
 
-    /**
-     * Determine whether the user can replicate.
-     */
-    public function replicate(User $user, Projeto $projeto): bool
+    public function replicate(AuthUser $authUser, Projeto $projeto): bool
     {
-        return $user->can('replicate_projeto');
+        return $authUser->can('Replicate:Projeto');
     }
 
-    /**
-     * Determine whether the user can reorder.
-     */
-    public function reorder(User $user): bool
+    public function reorder(AuthUser $authUser): bool
     {
-        return $user->can('reorder_projeto');
+        return $authUser->can('Reorder:Projeto');
     }
+
 }

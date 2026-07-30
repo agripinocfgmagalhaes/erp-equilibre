@@ -16,20 +16,23 @@ use App\Filament\Resources\ProjetoResource\Pages\ListProjetos;
 use App\Filament\Resources\ProjetoResource\Pages\CreateProjeto;
 use App\Filament\Resources\ProjetoResource\Pages\EditProjeto;
 use App\Filament\Resources\ProjetoResource\Pages;
+use Filament\Support\RawJs;
 use App\Filament\Imports\ProjetoImporter;
+use App\Filament\Imports\UnidadeImporter;
 use App\Models\Projeto;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Awcodes\TableRepeater\Components\TableRepeater;
-use Awcodes\TableRepeater\Header;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Repeater\TableColumn;
 class ProjetoResource extends Resource
 {
     protected static ?string $model = Projeto::class;
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-building-office-2';
     protected static ?string $navigationLabel = 'Empreendimentos';
     protected static string | \UnitEnum | null $navigationGroup = 'Configurações';
+    protected static bool $shouldRegisterNavigation = false;
     protected static ?int $navigationSort = 1;
     protected static ?string $slug = 'projetos';
     public static function form(Schema $schema): Schema
@@ -42,28 +45,38 @@ class ProjetoResource extends Resource
                 DatePicker::make('data_inicio')->label('Início')->native(false)->displayFormat('d/m/Y'),
                 DatePicker::make('data_previsao_fim')->label('Previsão de Fim')->native(false)->displayFormat('d/m/Y'),
                 Textarea::make('descricao')->label('Descrição')->rows(2)->columnSpanFull(),
-            ])->columns(2),
+            ])->columns(2)->columnSpanFull(),
             Section::make('Fases da Obra')->schema([
-                TableRepeater::make('fasesObra')->relationship()->label('')
-                    ->headers([Header::make('Nome')->width('300px'), Header::make('Ordem')->width('80px'), Header::make('% Conclusão')->width('120px')])
+                Repeater::make('fasesObra')->relationship()->label('')
+                    ->table([TableColumn::make('Nome')->width('300px'), TableColumn::make('Ordem')->width('80px'), TableColumn::make('% Conclusão')->width('120px')])
                     ->schema([
                         TextInput::make('nome')->label('Nome')->required()->maxLength(100),
                         TextInput::make('ordem')->label('Ordem')->numeric()->default(0),
                         TextInput::make('percentual')->label('%')->numeric()->step(0.01)->default(0),
                     ])->addActionLabel('+ Fase')->columnSpanFull()->defaultItems(0),
-            ]),
-            Section::make('Unidades')->schema([
-                TableRepeater::make('unidades')->relationship()->label('')
-                    ->headers([Header::make('ID')->width('100px'), Header::make('Tipo')->width('120px'), Header::make('Área (m²)')->width('100px'), Header::make('Valor Tabela')->width('150px'), Header::make('Status')->width('120px')])
+            ])->columnSpanFull(),
+            Section::make('Unidades')
+                ->headerActions([
+                    ImportAction::make('importarUnidades')->label('Importar Planilha')->importer(UnidadeImporter::class)
+                        ->visible(fn (?Projeto $record) => (bool) $record)
+                        ->options(fn (?Projeto $record) => ['projeto_id' => $record?->id]),
+                ])
+                ->schema([
+                Repeater::make('unidades')->relationship()->label('')
+                    ->table([TableColumn::make('ID')->width('90px'), TableColumn::make('Tipo')->width('150px'), TableColumn::make('Área (m²)')->width('100px'), TableColumn::make('Valor Tabela')->width('170px'), TableColumn::make('Status')->width('170px')])
                     ->schema([
                         TextInput::make('identificacao')->label('ID')->required()->maxLength(20),
-                        TextInput::make('tipo')->label('Tipo')->maxLength(50),
+                        Select::make('tipo')->label('Tipo')->native(false)->default('apartamento')
+                            ->options(['apartamento' => 'Apartamento', 'casa' => 'Casa', 'terreno' => 'Terreno', 'comercial' => 'Comercial']),
                         TextInput::make('area')->label('Área')->numeric()->step(0.01),
-                        TextInput::make('valor_tabela')->label('Valor')->numeric()->prefix('R$')->step(0.01)->default(0),
+                        TextInput::make('valor_tabela')->label('Valor')->numeric()->prefix('R$')->step(0.01)->default(0)
+                            ->mask(RawJs::make('$money($input, \',\', \'.\')'))->stripCharacters('.')
+                            ->dehydrateStateUsing(fn ($state) => $state !== null ? (float) str_replace(',', '.', $state) : null)
+                            ->formatStateUsing(fn ($state) => $state !== null ? number_format((float) $state, 2, ',', '.') : null),
                         Select::make('status')->label('Status')->native(false)->default('disponivel')
                             ->options(['disponivel' => 'Disponível', 'reservado' => 'Reservado', 'vendido' => 'Vendido', 'distratado' => 'Distratado']),
-                    ])->addActionLabel('+ Unidade')->columnSpanFull()->defaultItems(0),
-            ]),
+                    ])->addActionLabel('+ Unidade')->columnSpanFull()->defaultItems(0)->cloneable(),
+            ])->columnSpanFull(),
         ]);
     }
     public static function table(Table $table): Table
@@ -77,12 +90,12 @@ class ProjetoResource extends Resource
             TextColumn::make('data_previsao_fim')->label('Previsão Fim')->date('d/m/Y')->placeholder('—'),
         ])
         ->headerActions([ImportAction::make()->importer(ProjetoImporter::class)->label('Importar Planilha')])
-        ->recordActions([EditAction::make(), DeleteAction::make()])
+        ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
         ->defaultSort('nome')->striped();
     }
     public static function getPages(): array
     {
-        return ['index' => ListProjetos::route('/'), 'create' => CreateProjeto::route('/create'), 'edit' => EditProjeto::route('/{record}/edit')];
+        return ['index' => ListProjetos::route('/')];
     }
 }

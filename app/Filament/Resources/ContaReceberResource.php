@@ -51,14 +51,14 @@ class ContaReceberResource extends Resource
                     ->afterStateHydrated(fn ($component, $record) => $component->state($record?->status === 'cancelado'))
                     ->dehydrated(false)->live()->afterStateUpdated(fn (callable $set, $state) => $set('status', $state ? 'cancelado' : 'aberto')),
                 Hidden::make('status')->default('aberto'),
-            ])->columns(2),
+            ])->columns(2)->columnSpanFull(),
             Section::make('Valores e Datas')->schema([
                 TextInput::make('valor')->label('Valor')->numeric()->prefix('R$')->step(0.01)->required(),
                 TextInput::make('valor_recebido')->label('Valor Recebido')->numeric()->prefix('R$')->step(0.01)->default(0)->readOnly(),
                 DatePicker::make('data_vencimento')->label('Vencimento')->native(false)->displayFormat('d/m/Y')->required(),
                 DatePicker::make('data_recebimento')->label('Data de Recebimento')->native(false)->displayFormat('d/m/Y')->readOnly(),
                 Textarea::make('observacoes')->label('Observações')->rows(2)->columnSpanFull(),
-            ])->columns(2),
+            ])->columns(2)->columnSpanFull(),
         ]);
     }
     public static function table(Table $table): Table
@@ -120,6 +120,6 @@ class ContaReceberResource extends Resource
     }
     public static function getPages(): array
     {
-        return ['index' => ListContasReceber::route('/'), 'create' => CreateContaReceber::route('/create'), 'edit' => EditContaReceber::route('/{record}/edit')];
+        return ['index' => ListContasReceber::route('/')];
     }
 }

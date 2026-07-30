@@ -28,6 +28,7 @@ use App\Filament\Resources\RequisicaoCompraResource\Pages;
 use App\Filament\Resources\RequisicaoCompraResource\RelationManagers\CotacoesRelationManager;
 use App\Models\RequisicaoCompra;
 use App\Models\Projeto;
+use App\Models\Fornecedor;
 use App\Models\FaseObra;
 use App\Models\Produto;
 use Filament\Forms;
@@ -155,6 +156,27 @@ class RequisicaoCompraResource extends Resource
                 })
                 ->successNotificationTitle('Pedido de compra gerado a partir da cotação vencedora'),
 
+            Action::make('gerarPedidoSemCotacao')->label('Gerar Pedido sem Cotação')->icon('heroicon-o-bolt')->color('gray')
+                ->visible(fn (RequisicaoCompra $record) => in_array($record->status, ['em_cotacao', 'cotada']) && Auth::user()->hasAnyRole(['responsavel', 'admin']))
+                ->schema(fn (RequisicaoCompra $record) => [
+                    Select::make('fornecedor_id')->label('Fornecedor')
+                        ->options(Fornecedor::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->required(),
+                    TextInput::make('prazo_entrega_dias')->label('Prazo de Entrega (dias)')->numeric()->minValue(0),
+                    Repeater::make('itens_pedido')->label('Itens e Preços')
+                        ->schema([
+                            Hidden::make('item_id'),
+                            TextInput::make('descricao')->label('Item')->disabled()->dehydrated(false),
+                            TextInput::make('valor_unitario')->label('Valor Unitário')->numeric()->prefix('R$')->step(0.01)->default(0)->required(),
+                        ])
+                        ->default($record->itens->map(fn ($i) => ['item_id' => $i->id, 'descricao' => $i->descricao, 'valor_unitario' => 0])->toArray())
+                        ->addable(false)->deletable(false)->reorderable(false)->columns(3)->columnSpanFull(),
+                ])
+                ->action(function (RequisicaoCompra $record, array $data) {
+                    $itensPrecos = collect($data['itens_pedido'])->pluck('valor_unitario', 'item_id')->toArray();
+                    $record->gerarPedidoDireto($data['fornecedor_id'], $itensPrecos, $data['prazo_entrega_dias'] ?? null);
+                })
+                ->successNotificationTitle('Pedido de compra gerado diretamente, sem cotação'),
+
             EditAction::make()->slideOver()->modalWidth('6xl')->visible(fn (RequisicaoCompra $record) => $record->status === 'rascunho'),
             ViewAction::make()->label('Cotações')->icon('heroicon-o-eye')->visible(fn (RequisicaoCompra $record) => $record->status !== 'rascunho'),
             DeleteAction::make()->visible(fn (RequisicaoCompra $record) => $record->status === 'rascunho'),
@@ -207,8 +229,6 @@ class RequisicaoCompraResource extends Resource
     {
         return [
             'index' => ListRequisicoesCompra::route('/'),
-            'create' => CreateRequisicaoCompra::route('/create'),
-            'edit' => EditRequisicaoCompra::route('/{record}/edit'),
             'view' => ViewRequisicaoCompra::route('/{record}'),
         ];
     }

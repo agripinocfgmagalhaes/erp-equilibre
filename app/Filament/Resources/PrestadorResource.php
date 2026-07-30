@@ -58,6 +58,6 @@ class PrestadorResource extends Resource
     }
     public static function getPages(): array
     {
-        return ['index' => ListPrestadores::route('/'), 'create' => CreatePrestador::route('/create'), 'edit' => EditPrestador::route('/{record}/edit')];
+        return ['index' => ListPrestadores::route('/')];
     }
 }

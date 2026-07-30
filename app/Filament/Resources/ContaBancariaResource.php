@@ -25,6 +25,7 @@ class ContaBancariaResource extends Resource
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-building-library';
     protected static ?string $navigationLabel = 'Contas Bancárias';
     protected static string | \UnitEnum | null $navigationGroup = 'Configurações';
+    protected static bool $shouldRegisterNavigation = false;
     protected static ?int $navigationSort = 2;
     protected static ?string $slug = 'contas-bancarias';
     public static function form(Schema $schema): Schema
@@ -54,6 +55,6 @@ class ContaBancariaResource extends Resource
     }
     public static function getPages(): array
     {
-        return ['index' => ListContasBancarias::route('/'), 'create' => CreateContaBancaria::route('/create'), 'edit' => EditContaBancaria::route('/{record}/edit')];
+        return ['index' => ListContasBancarias::route('/')];
     }
 }

@@ -1,108 +1,75 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
-use App\Models\User;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\FasePadrao;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class FasePadraoPolicy
 {
     use HandlesAuthorization;
-
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->can('view_any_fase::padrao');
+        return $authUser->can('ViewAny:FasePadrao');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, FasePadrao $fasePadrao): bool
+    public function view(AuthUser $authUser, FasePadrao $fasePadrao): bool
     {
-        return $user->can('view_fase::padrao');
+        return $authUser->can('View:FasePadrao');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->can('create_fase::padrao');
+        return $authUser->can('Create:FasePadrao');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, FasePadrao $fasePadrao): bool
+    public function update(AuthUser $authUser, FasePadrao $fasePadrao): bool
     {
-        return $user->can('update_fase::padrao');
+        return $authUser->can('Update:FasePadrao');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, FasePadrao $fasePadrao): bool
+    public function delete(AuthUser $authUser, FasePadrao $fasePadrao): bool
     {
-        return $user->can('delete_fase::padrao');
+        return $authUser->can('Delete:FasePadrao');
     }
 
-    /**
-     * Determine whether the user can bulk delete.
-     */
-    public function deleteAny(User $user): bool
+    public function deleteAny(AuthUser $authUser): bool
     {
-        return $user->can('delete_any_fase::padrao');
+        return $authUser->can('DeleteAny:FasePadrao');
     }
 
-    /**
-     * Determine whether the user can permanently delete.
-     */
-    public function forceDelete(User $user, FasePadrao $fasePadrao): bool
+    public function restore(AuthUser $authUser, FasePadrao $fasePadrao): bool
     {
-        return $user->can('force_delete_fase::padrao');
+        return $authUser->can('Restore:FasePadrao');
     }
 
-    /**
-     * Determine whether the user can permanently bulk delete.
-     */
-    public function forceDeleteAny(User $user): bool
+    public function forceDelete(AuthUser $authUser, FasePadrao $fasePadrao): bool
     {
-        return $user->can('force_delete_any_fase::padrao');
+        return $authUser->can('ForceDelete:FasePadrao');
     }
 
-    /**
-     * Determine whether the user can restore.
-     */
-    public function restore(User $user, FasePadrao $fasePadrao): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $user->can('restore_fase::padrao');
+        return $authUser->can('ForceDeleteAny:FasePadrao');
     }
 
-    /**
-     * Determine whether the user can bulk restore.
-     */
-    public function restoreAny(User $user): bool
+    public function restoreAny(AuthUser $authUser): bool
     {
-        return $user->can('restore_any_fase::padrao');
+        return $authUser->can('RestoreAny:FasePadrao');
     }
 
-    /**
-     * Determine whether the user can replicate.
-     */
-    public function replicate(User $user, FasePadrao $fasePadrao): bool
+    public function replicate(AuthUser $authUser, FasePadrao $fasePadrao): bool
     {
-        return $user->can('replicate_fase::padrao');
+        return $authUser->can('Replicate:FasePadrao');
     }
 
-    /**
-     * Determine whether the user can reorder.
-     */
-    public function reorder(User $user): bool
+    public function reorder(AuthUser $authUser): bool
     {
-        return $user->can('reorder_fase::padrao');
+        return $authUser->can('Reorder:FasePadrao');
     }
+
 }

@@ -60,14 +60,14 @@ class ContaPagarResource extends Resource
                     ->afterStateHydrated(fn ($component, $record) => $component->state($record?->status === 'cancelado'))
                     ->dehydrated(false)->live()->afterStateUpdated(fn (callable $set, $state) => $set('status', $state ? 'cancelado' : 'aberto')),
                 Hidden::make('status')->default('aberto'),
-            ])->columns(2),
+            ])->columns(2)->columnSpanFull(),
             Section::make('Valores e Datas')->schema([
                 TextInput::make('valor')->label('Valor')->numeric()->prefix('R$')->step(0.01)->required(),
                 TextInput::make('valor_pago')->label('Valor Pago')->numeric()->prefix('R$')->step(0.01)->default(0)->readOnly(),
                 DatePicker::make('data_vencimento')->label('Vencimento')->native(false)->displayFormat('d/m/Y')->required(),
                 DatePicker::make('data_pagamento')->label('Data de Pagamento')->native(false)->displayFormat('d/m/Y')->readOnly(),
                 Textarea::make('observacoes')->label('Observações')->rows(2)->columnSpanFull(),
-            ])->columns(2),
+            ])->columns(2)->columnSpanFull(),
         ]);
     }
     public static function table(Table $table): Table
@@ -127,6 +127,6 @@ class ContaPagarResource extends Resource
     }
     public static function getPages(): array
     {
-        return ['index' => ListContasPagar::route('/'), 'create' => CreateContaPagar::route('/create'), 'edit' => EditContaPagar::route('/{record}/edit')];
+        return ['index' => ListContasPagar::route('/')];
     }
 }

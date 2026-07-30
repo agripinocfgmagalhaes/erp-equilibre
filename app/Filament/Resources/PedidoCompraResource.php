@@ -27,8 +27,8 @@ use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Awcodes\TableRepeater\Components\TableRepeater;
-use Awcodes\TableRepeater\Header;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Repeater\TableColumn;
 class PedidoCompraResource extends Resource
 {
     protected static ?string $model = PedidoCompra::class;
@@ -50,10 +50,10 @@ class PedidoCompraResource extends Resource
                 DatePicker::make('data_pedido')->label('Data do Pedido')->native(false)->displayFormat('d/m/Y')->default(now())->required(),
                 DatePicker::make('data_previsao_entrega')->label('Previsão de Entrega')->native(false)->displayFormat('d/m/Y'),
                 Textarea::make('observacoes')->label('Observações')->rows(2)->columnSpanFull(),
-            ])->columns(3),
+            ])->columns(3)->columnSpanFull(),
             Section::make('Itens')->schema([
-                TableRepeater::make('itens')->relationship()->label('')
-                    ->headers([Header::make('Produto')->width('200px'), Header::make('Descrição')->width('200px'), Header::make('Unid.')->width('80px'), Header::make('Qtd.')->width('100px'), Header::make('Valor Unit. (R$)')->width('140px'), Header::make('Total (R$)')->width('140px')])
+                Repeater::make('itens')->relationship()->label('')
+                    ->table([TableColumn::make('Produto')->width('200px'), TableColumn::make('Descrição')->width('200px'), TableColumn::make('Unid.')->width('80px'), TableColumn::make('Qtd.')->width('100px'), TableColumn::make('Valor Unit. (R$)')->width('140px'), TableColumn::make('Total (R$)')->width('140px')])
                     ->schema([
                         Select::make('produto_id')->label('Produto')
                             ->options(Produto::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->nullable()
@@ -79,7 +79,7 @@ class PedidoCompraResource extends Resource
                         foreach ($itens as $key => $item) { $itens[$key]['valor_total'] = round((float)($item['quantidade'] ?? 0) * (float)($item['valor_unitario'] ?? 0), 2); }
                         $set('itens', $itens);
                     }),
-            ]),
+            ])->columnSpanFull(),
         ]);
     }
     public static function table(Table $table): Table
@@ -113,6 +113,6 @@ class PedidoCompraResource extends Resource
     }
     public static function getPages(): array
     {
-        return ['index' => ListPedidosCompra::route('/'), 'create' => CreatePedidoCompra::route('/create'), 'edit' => EditPedidoCompra::route('/{record}/edit')];
+        return ['index' => ListPedidosCompra::route('/')];
     }
 }
