@@ -100,8 +100,8 @@ class LancamentoBancarioResource extends Resource
             ])
             ->filtersLayout(FiltersLayout::AboveContent)
             ->recordActions([
-                EditAction::make()->slideOver()->visible(fn (LancamentoBancario $record) => $record->origem === 'manual'),
-                DeleteAction::make()->visible(fn (LancamentoBancario $record) => $record->origem === 'manual'),
+                EditAction::make()->slideOver()->iconButton()->visible(fn (LancamentoBancario $record) => $record->origem === 'manual'),
+                DeleteAction::make()->iconButton()->visible(fn (LancamentoBancario $record) => $record->origem === 'manual'),
             ])
             ->toolbarActions([])->defaultSort('data', 'asc');
     }

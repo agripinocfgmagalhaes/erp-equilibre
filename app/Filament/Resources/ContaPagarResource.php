@@ -79,7 +79,7 @@ class ContaPagarResource extends Resource
             ->contentGrid(fn () => $livewire->isListLayout() ? null : ['md' => 2, 'lg' => 3])
             ->filters([SelectFilter::make('status')->options(['aberto' => 'Aberto', 'pago' => 'Pago', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado'])])
             ->recordActions([
-            Action::make('darBaixa')->label('Dar Baixa')->icon('heroicon-o-check-circle')->color('success')
+            Action::make('darBaixa')->label('Dar Baixa')->icon('heroicon-o-check-circle')->color('success')->iconButton()
                 ->visible(fn (ContaPagar $record) => ! in_array($record->status, ['pago', 'cancelado']))
                 ->schema([
                     TextInput::make('valor_pago')->label('Valor Pago')->numeric()->prefix('R$')->step(0.01)->required(),
@@ -88,8 +88,8 @@ class ContaPagarResource extends Resource
                 ])
                 ->fillForm(fn (ContaPagar $record) => ['valor_pago' => $record->valor])
                 ->action(fn (ContaPagar $record, array $data) => $record->darBaixa((float) $data['valor_pago'], $data['data_pagamento'], $data['conta_bancaria_id'] ?? null)),
-            EditAction::make()->slideOver()->modalWidth('4xl'),
-            DeleteAction::make(),
+            EditAction::make()->slideOver()->modalWidth('4xl')->iconButton(),
+            DeleteAction::make()->iconButton(),
         ])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
         ->defaultSort('data_vencimento')->striped();
