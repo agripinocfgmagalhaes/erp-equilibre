@@ -13,6 +13,7 @@ use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
@@ -70,7 +71,7 @@ class ContaReceberResource extends Resource
         ->contentGrid(fn () => $livewire->isListLayout() ? null : ['md' => 2, 'lg' => 3])
         ->filters([SelectFilter::make('status')->options(['aberto' => 'Aberto', 'recebido' => 'Recebido', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado'])])
         ->recordActions([
-            Action::make('darBaixa')->label('Dar Baixa')->icon('heroicon-o-check-circle')->color('success')
+            Action::make('darBaixa')->label('Dar Baixa')->icon('heroicon-o-check-circle')->color('success')->iconButton()
                 ->visible(fn (ContaReceber $record) => ! in_array($record->status, ['recebido', 'cancelado']))
                 ->schema([
                     TextInput::make('valor_recebido')->label('Valor Recebido')->numeric()->prefix('R$')->step(0.01)->required(),
@@ -79,8 +80,20 @@ class ContaReceberResource extends Resource
                 ])
                 ->fillForm(fn (ContaReceber $record) => ['valor_recebido' => $record->valor])
                 ->action(fn (ContaReceber $record, array $data) => $record->darBaixa((float) $data['valor_recebido'], $data['data_recebimento'], $data['conta_bancaria_id'] ?? null)),
-            EditAction::make()->slideOver()->modalWidth('4xl'),
-            DeleteAction::make(),
+            Action::make('emitirBoleto')->label('Emitir Boleto Inter')->icon('heroicon-o-document-currency-dollar')->color('info')->iconButton()
+                ->visible(fn (ContaReceber $record) => !$record->inter_codigo_solicitacao && $record->status !== 'recebido')
+                ->action(function (ContaReceber $record) {
+                    app(\App\Services\InterBoletoService::class)->emitir($record);
+                    Notification::make()->title('Boleto emitido')->success()->send();
+                }),
+            Action::make('verBoleto')->label('Ver Boleto')->icon('heroicon-o-eye')->color('gray')->iconButton()
+                ->visible(fn (ContaReceber $record) => (bool) $record->inter_codigo_solicitacao)
+                ->modalContent(fn (ContaReceber $record) => view('boleto-info', ['conta' => $record]))
+                ->modalSubmitAction(false)
+                ->modalCancelAction(false),
+
+            EditAction::make()->slideOver()->modalWidth('4xl')->iconButton(),
+            DeleteAction::make()->iconButton(),
         ])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
         ->defaultSort('data_vencimento')->striped();
