@@ -83,11 +83,11 @@ class ProjetoResource extends Resource
     {
         return $table->columns([
             TextColumn::make('nome')->label('Nome')->searchable()->sortable()->weight('medium'),
-            TextColumn::make('status')->label('Status')->badge()
+            TextColumn::make('status')->sortable()->label('Status')->badge()
                 ->colors(['gray' => 'planejamento', 'info' => 'em_andamento', 'success' => 'concluido', 'danger' => 'cancelado'])
                 ->formatStateUsing(fn ($state) => match($state) { 'planejamento' => 'Planejamento', 'em_andamento' => 'Em Andamento', 'concluido' => 'Concluído', 'cancelado' => 'Cancelado', default => $state }),
-            TextColumn::make('data_inicio')->label('Início')->date('d/m/Y')->placeholder('—'),
-            TextColumn::make('data_previsao_fim')->label('Previsão Fim')->date('d/m/Y')->placeholder('—'),
+            TextColumn::make('data_inicio')->sortable()->label('Início')->date('d/m/Y')->placeholder('—'),
+            TextColumn::make('data_previsao_fim')->sortable()->label('Previsão Fim')->date('d/m/Y')->placeholder('—'),
         ])
         ->headerActions([ImportAction::make()->importer(ProjetoImporter::class)->label('Importar Planilha')])
         ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])

@@ -101,7 +101,7 @@ class ContaPagarResource extends Resource
             TextColumn::make('nome_contato')->label('Contato')->placeholder('—'),
             TextColumn::make('valor')->label('Valor')->money('BRL')->sortable(),
             TextColumn::make('data_vencimento')->label('Vencimento')->date('d/m/Y')->sortable(),
-            TextColumn::make('status')->label('Status')->badge()
+            TextColumn::make('status')->sortable()->label('Status')->badge()
                 ->colors(['gray' => 'aberto', 'success' => 'pago', 'danger' => 'vencido', 'secondary' => 'cancelado'])
                 ->formatStateUsing(fn ($state) => ['aberto' => 'Aberto', 'pago' => 'Pago', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado'][$state] ?? $state),
         ];
@@ -112,15 +112,15 @@ class ContaPagarResource extends Resource
             Stack::make([
                 Split::make([
                     TextColumn::make('descricao')->label('Descrição')->searchable()->sortable()->weight('medium'),
-                    TextColumn::make('status')->label('Status')->badge()
+                    TextColumn::make('status')->sortable()->label('Status')->badge()
                         ->colors(['gray' => 'aberto', 'success' => 'pago', 'danger' => 'vencido', 'secondary' => 'cancelado'])
                         ->formatStateUsing(fn ($state) => ['aberto' => 'Aberto', 'pago' => 'Pago', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado'][$state] ?? $state)
                         ->grow(false),
                 ]),
-                TextColumn::make('nome_contato')->label('Contato')->description('Contato', position: 'above')->placeholder('—'),
+                TextColumn::make('nome_contato')->sortable()->label('Contato')->description('Contato', position: 'above')->placeholder('—'),
                 Split::make([
-                    TextColumn::make('valor')->label('Valor')->description('Valor', position: 'above')->money('BRL'),
-                    TextColumn::make('data_vencimento')->label('Vencimento')->description('Vencimento', position: 'above')->date('d/m/Y'),
+                    TextColumn::make('valor')->sortable()->label('Valor')->description('Valor', position: 'above')->money('BRL'),
+                    TextColumn::make('data_vencimento')->sortable()->label('Vencimento')->description('Vencimento', position: 'above')->date('d/m/Y'),
                 ]),
             ])->space(3)->extraAttributes(['class' => 'pb-2']),
         ];

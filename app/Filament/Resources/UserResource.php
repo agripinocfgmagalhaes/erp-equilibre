@@ -43,8 +43,8 @@ class UserResource extends Resource
     {
         return $table->columns([
             TextColumn::make('name')->label('Nome')->searchable()->sortable()->weight('medium'),
-            TextColumn::make('email')->label('E-mail')->searchable(),
-            TextColumn::make('roles.name')->label('Perfis de Acesso')->badge()->separator(',')->placeholder('—'),
+            TextColumn::make('email')->sortable()->label('E-mail')->searchable(),
+            TextColumn::make('roles.name')->sortable()->label('Perfis de Acesso')->badge()->separator(',')->placeholder('—'),
             TextColumn::make('created_at')->label('Criado em')->dateTime('d/m/Y H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),
         ])
         ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])

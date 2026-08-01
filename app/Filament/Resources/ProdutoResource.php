@@ -43,12 +43,12 @@ class ProdutoResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            TextColumn::make('codigo')->label('Código')->searchable()->placeholder('—'),
-            TextColumn::make('nome')->label('Nome')->searchable()->weight('medium'),
-            TextColumn::make('categoria')->label('Categoria')->placeholder('—'),
-            TextColumn::make('unidade')->label('Unid.'),
-            TextColumn::make('preco_referencia')->label('Preço Ref.')->money('BRL'),
-            IconColumn::make('ativo')->label('Ativo')->boolean(),
+            TextColumn::make('codigo')->sortable()->label('Código')->searchable()->placeholder('—'),
+            TextColumn::make('nome')->sortable()->label('Nome')->searchable()->weight('medium'),
+            TextColumn::make('categoria')->sortable()->label('Categoria')->placeholder('—'),
+            TextColumn::make('unidade')->sortable()->label('Unid.'),
+            TextColumn::make('preco_referencia')->sortable()->label('Preço Ref.')->money('BRL'),
+            IconColumn::make('ativo')->sortable()->label('Ativo')->boolean(),
         ])
         ->filters([TernaryFilter::make('ativo')->trueLabel('Ativos')->falseLabel('Inativos')])
         ->headerActions([ImportAction::make()->importer(ProdutoImporter::class)->label('Importar Planilha')])

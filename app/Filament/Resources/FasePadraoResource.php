@@ -37,8 +37,8 @@ class FasePadraoResource extends Resource
     {
         return $table->columns([
             TextColumn::make('ordem')->label('Ordem')->sortable(),
-            TextColumn::make('nome')->label('Nome')->searchable()->weight('medium'),
-            TextColumn::make('macro_categoria')->label('Macro Categoria')->placeholder('—'),
+            TextColumn::make('nome')->sortable()->label('Nome')->searchable()->weight('medium'),
+            TextColumn::make('macro_categoria')->sortable()->label('Macro Categoria')->placeholder('—'),
         ])
         ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])

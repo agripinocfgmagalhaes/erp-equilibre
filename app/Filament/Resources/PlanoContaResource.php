@@ -43,10 +43,10 @@ class PlanoContaResource extends Resource
     {
         return $table->columns([
             TextColumn::make('codigo')->label('Código')->sortable()->searchable(),
-            TextColumn::make('nome')->label('Nome')->searchable()->weight('medium'),
-            TextColumn::make('pai.nome')->label('Conta Pai')->placeholder('—'),
-            TextColumn::make('tipo')->label('Tipo')->badge()->colors(['danger' => 'despesa', 'success' => 'receita'])->formatStateUsing(fn ($state) => $state === 'despesa' ? 'Despesa' : 'Receita'),
-            IconColumn::make('ativo')->label('Ativo')->boolean(),
+            TextColumn::make('nome')->sortable()->label('Nome')->searchable()->weight('medium'),
+            TextColumn::make('pai.nome')->sortable()->label('Conta Pai')->placeholder('—'),
+            TextColumn::make('tipo')->sortable()->label('Tipo')->badge()->colors(['danger' => 'despesa', 'success' => 'receita'])->formatStateUsing(fn ($state) => $state === 'despesa' ? 'Despesa' : 'Receita'),
+            IconColumn::make('ativo')->sortable()->label('Ativo')->boolean(),
         ])
         ->filters([SelectFilter::make('tipo')->options(['despesa' => 'Despesa', 'receita' => 'Receita'])])
         ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])

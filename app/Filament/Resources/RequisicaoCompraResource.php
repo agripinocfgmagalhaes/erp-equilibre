@@ -189,12 +189,12 @@ class RequisicaoCompraResource extends Resource
     {
         return [
             TextColumn::make('numero')->label('Número')->searchable()->sortable()->weight('medium'),
-            TextColumn::make('projeto.nome')->label('Empreendimento')->placeholder('—'),
-            TextColumn::make('solicitante.name')->label('Encarregado')->searchable(),
-            TextColumn::make('status')->label('Status')->badge()
+            TextColumn::make('projeto.nome')->sortable()->label('Empreendimento')->placeholder('—'),
+            TextColumn::make('solicitante.name')->sortable()->label('Encarregado')->searchable(),
+            TextColumn::make('status')->sortable()->label('Status')->badge()
                 ->colors(self::STATUS_COLORS)
                 ->formatStateUsing(fn ($state) => self::STATUS_LABELS[$state] ?? $state),
-            TextColumn::make('cotacoes_count')->label('Cotações')->counts('cotacoes')->badge()->color('gray'),
+            TextColumn::make('cotacoes_count')->sortable()->label('Cotações')->counts('cotacoes')->badge()->color('gray'),
             TextColumn::make('data_requisicao')->label('Data')->date('d/m/Y')->sortable(),
         ];
     }
@@ -205,16 +205,16 @@ class RequisicaoCompraResource extends Resource
             Stack::make([
                 Split::make([
                     TextColumn::make('numero')->label('Número')->searchable()->sortable()->weight('medium'),
-                    TextColumn::make('status')->label('Status')->badge()
+                    TextColumn::make('status')->sortable()->label('Status')->badge()
                         ->colors(self::STATUS_COLORS)
                         ->formatStateUsing(fn ($state) => self::STATUS_LABELS[$state] ?? $state)
                         ->grow(false),
                 ]),
-                TextColumn::make('projeto.nome')->label('Empreendimento')->description('Empreendimento', position: 'above')->placeholder('—'),
+                TextColumn::make('projeto.nome')->sortable()->label('Empreendimento')->description('Empreendimento', position: 'above')->placeholder('—'),
                 Split::make([
-                    TextColumn::make('solicitante.name')->label('Encarregado')->description('Encarregado', position: 'above')->searchable(),
-                    TextColumn::make('data_requisicao')->label('Data')->description('Data', position: 'above')->date('d/m/Y'),
-                    TextColumn::make('cotacoes_count')->label('Cotações')->description('Cotações', position: 'above')->counts('cotacoes')->badge()->color('gray')->grow(false),
+                    TextColumn::make('solicitante.name')->sortable()->label('Encarregado')->description('Encarregado', position: 'above')->searchable(),
+                    TextColumn::make('data_requisicao')->sortable()->label('Data')->description('Data', position: 'above')->date('d/m/Y'),
+                    TextColumn::make('cotacoes_count')->sortable()->label('Cotações')->description('Cotações', position: 'above')->counts('cotacoes')->badge()->color('gray')->grow(false),
                 ]),
             ])->space(3)->extraAttributes(['class' => 'pb-2']),
         ];

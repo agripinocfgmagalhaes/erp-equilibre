@@ -46,10 +46,10 @@ class FornecedorResource extends Resource
     {
         return $table->columns([
             TextColumn::make('nome')->label('Nome')->searchable()->sortable()->weight('medium'),
-            TextColumn::make('cnpj')->label('CNPJ')->placeholder('—'),
-            TextColumn::make('telefone')->label('Telefone')->placeholder('—'),
-            TextColumn::make('contato')->label('Contato')->placeholder('—'),
-            IconColumn::make('ativo')->label('Ativo')->boolean(),
+            TextColumn::make('cnpj')->sortable()->label('CNPJ')->placeholder('—'),
+            TextColumn::make('telefone')->sortable()->label('Telefone')->placeholder('—'),
+            TextColumn::make('contato')->sortable()->label('Contato')->placeholder('—'),
+            IconColumn::make('ativo')->sortable()->label('Ativo')->boolean(),
         ])
         ->filters([TernaryFilter::make('ativo')->trueLabel('Ativos')->falseLabel('Inativos')])
         ->headerActions([ImportAction::make()->importer(FornecedorImporter::class)->label('Importar Planilha')])

@@ -143,12 +143,12 @@ class ContratoVendaResource extends Resource
     {
         return [
             TextColumn::make('numero')->label('Número')->searchable()->sortable()->weight('medium'),
-            TextColumn::make('unidade.identificacao')->label('Unidade')->searchable(),
+            TextColumn::make('unidade.identificacao')->sortable()->label('Unidade')->searchable(),
             TextColumn::make('unidade.projeto.nome')->label('Empreendimento')->searchable(),
             TextColumn::make('cliente.nome')->label('Cliente')->searchable()->sortable(),
             TextColumn::make('valor_venda')->label('Valor')->money('BRL')->sortable(),
             TextColumn::make('data_contrato')->label('Data')->date('d/m/Y')->sortable(),
-            TextColumn::make('status')->label('Status')->badge()
+            TextColumn::make('status')->sortable()->label('Status')->badge()
                 ->colors(['success' => 'ativo', 'warning' => 'distratado', 'danger' => 'cancelado'])
                 ->formatStateUsing(fn ($state) => match($state) { 'ativo' => 'Ativo', 'distratado' => 'Distratado', 'cancelado' => 'Cancelado', default => $state }),
         ];
@@ -159,19 +159,19 @@ class ContratoVendaResource extends Resource
             Stack::make([
                 Split::make([
                     TextColumn::make('numero')->label('Número')->searchable()->sortable()->weight('medium'),
-                    TextColumn::make('status')->label('Status')->badge()
+                    TextColumn::make('status')->sortable()->label('Status')->badge()
                         ->colors(['success' => 'ativo', 'warning' => 'distratado', 'danger' => 'cancelado'])
                         ->formatStateUsing(fn ($state) => match($state) { 'ativo' => 'Ativo', 'distratado' => 'Distratado', 'cancelado' => 'Cancelado', default => $state })
                         ->grow(false),
                 ]),
                 Split::make([
-                    TextColumn::make('unidade.identificacao')->label('Unidade')->description('Unidade', position: 'above')->searchable(),
-                    TextColumn::make('unidade.projeto.nome')->label('Empreendimento')->description('Empreendimento', position: 'above')->searchable(),
+                    TextColumn::make('unidade.identificacao')->sortable()->label('Unidade')->description('Unidade', position: 'above')->searchable(),
+                    TextColumn::make('unidade.projeto.nome')->sortable()->label('Empreendimento')->description('Empreendimento', position: 'above')->searchable(),
                 ]),
-                TextColumn::make('cliente.nome')->label('Cliente')->description('Cliente', position: 'above')->searchable(),
+                TextColumn::make('cliente.nome')->sortable()->label('Cliente')->description('Cliente', position: 'above')->searchable(),
                 Split::make([
-                    TextColumn::make('valor_venda')->label('Valor')->description('Valor', position: 'above')->money('BRL'),
-                    TextColumn::make('data_contrato')->label('Data')->description('Data', position: 'above')->date('d/m/Y'),
+                    TextColumn::make('valor_venda')->sortable()->label('Valor')->description('Valor', position: 'above')->money('BRL'),
+                    TextColumn::make('data_contrato')->sortable()->label('Data')->description('Data', position: 'above')->date('d/m/Y'),
                 ]),
             ])->space(3)->extraAttributes(['class' => 'pb-2']),
         ];

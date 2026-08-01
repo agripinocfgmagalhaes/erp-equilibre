@@ -85,11 +85,11 @@ class ClienteResource extends Resource
     {
         return [
             TextColumn::make('nome')->label('Nome')->searchable()->sortable()->weight('medium'),
-            TextColumn::make('cpf')->label('CPF')->searchable()->placeholder('—'),
-            TextColumn::make('whatsapp')->label('WhatsApp')->placeholder('—'),
-            TextColumn::make('email')->label('E-mail')->searchable()->placeholder('—'),
-            TextColumn::make('estado_civil')->label('Estado Civil')->formatStateUsing(fn ($state) => Cliente::ESTADOS_CIVIS[$state] ?? '—')->placeholder('—'),
-            IconColumn::make('ativo')->label('Ativo')->boolean(),
+            TextColumn::make('cpf')->sortable()->label('CPF')->searchable()->placeholder('—'),
+            TextColumn::make('whatsapp')->sortable()->label('WhatsApp')->placeholder('—'),
+            TextColumn::make('email')->sortable()->label('E-mail')->searchable()->placeholder('—'),
+            TextColumn::make('estado_civil')->sortable()->label('Estado Civil')->formatStateUsing(fn ($state) => Cliente::ESTADOS_CIVIS[$state] ?? '—')->placeholder('—'),
+            IconColumn::make('ativo')->sortable()->label('Ativo')->boolean(),
         ];
     }
     protected static function getGridTableColumns(): array
@@ -98,14 +98,14 @@ class ClienteResource extends Resource
             Stack::make([
                 Split::make([
                     TextColumn::make('nome')->label('Nome')->searchable()->sortable()->weight('medium'),
-                    IconColumn::make('ativo')->label('Ativo')->boolean()->grow(false),
+                    IconColumn::make('ativo')->sortable()->label('Ativo')->boolean()->grow(false),
                 ]),
                 Split::make([
-                    TextColumn::make('cpf')->label('CPF')->description('CPF', position: 'above')->searchable()->placeholder('—'),
-                    TextColumn::make('whatsapp')->label('WhatsApp')->description('WhatsApp', position: 'above')->placeholder('—'),
+                    TextColumn::make('cpf')->sortable()->label('CPF')->description('CPF', position: 'above')->searchable()->placeholder('—'),
+                    TextColumn::make('whatsapp')->sortable()->label('WhatsApp')->description('WhatsApp', position: 'above')->placeholder('—'),
                 ]),
-                TextColumn::make('email')->label('E-mail')->description('E-mail', position: 'above')->searchable()->placeholder('—'),
-                TextColumn::make('estado_civil')->label('Estado Civil')->description('Estado Civil', position: 'above')->formatStateUsing(fn ($state) => Cliente::ESTADOS_CIVIS[$state] ?? '—')->placeholder('—'),
+                TextColumn::make('email')->sortable()->label('E-mail')->description('E-mail', position: 'above')->searchable()->placeholder('—'),
+                TextColumn::make('estado_civil')->sortable()->label('Estado Civil')->description('Estado Civil', position: 'above')->formatStateUsing(fn ($state) => Cliente::ESTADOS_CIVIS[$state] ?? '—')->placeholder('—'),
             ])->space(3)->extraAttributes(['class' => 'pb-2']),
         ];
     }
