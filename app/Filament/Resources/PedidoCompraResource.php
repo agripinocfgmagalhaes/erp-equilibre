@@ -87,8 +87,8 @@ class PedidoCompraResource extends Resource
         return $table->columns([
             TextColumn::make('numero')->label('Número')->searchable()->sortable()->weight('medium'),
             TextColumn::make('fornecedor.nome')->label('Fornecedor')->searchable()->sortable(),
-            TextColumn::make('projeto.nome')->label('Empreendimento')->placeholder('—'),
-            TextColumn::make('status')->label('Status')->badge()
+            TextColumn::make('projeto.nome')->sortable()->label('Empreendimento')->placeholder('—'),
+            TextColumn::make('status')->sortable()->label('Status')->badge()
                 ->colors(['gray' => 'rascunho', 'info' => 'aprovado', 'warning' => 'recebido_parcial', 'success' => 'recebido', 'danger' => 'cancelado'])
                 ->formatStateUsing(fn ($state) => match($state) { 'rascunho' => 'Rascunho', 'aprovado' => 'Aprovado', 'recebido_parcial' => 'Recebido Parcial', 'recebido' => 'Recebido', 'cancelado' => 'Cancelado', default => $state }),
             TextColumn::make('data_pedido')->label('Data')->date('d/m/Y')->sortable(),

@@ -65,12 +65,12 @@ class CotacoesRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('fornecedor.nome')
             ->columns([
-                TextColumn::make('fornecedor.nome')->label('Fornecedor')->weight('medium'),
-                TextColumn::make('data_cotacao')->label('Data')->date('d/m/Y'),
-                TextColumn::make('prazo_entrega_dias')->label('Prazo')->suffix(' dia(s)')->placeholder('—'),
+                TextColumn::make('fornecedor.nome')->sortable()->label('Fornecedor')->weight('medium'),
+                TextColumn::make('data_cotacao')->sortable()->label('Data')->date('d/m/Y'),
+                TextColumn::make('prazo_entrega_dias')->sortable()->label('Prazo')->suffix(' dia(s)')->placeholder('—'),
                 TextColumn::make('condicao_pagamento')->label('Pagamento')->placeholder('—'),
                 TextColumn::make('valor_total')->label('Valor Total')->money('BRL')->sortable(),
-                IconColumn::make('vencedora')->label('Vencedora')->boolean(),
+                IconColumn::make('vencedora')->sortable()->label('Vencedora')->boolean(),
             ])
             ->headerActions([
                 CreateAction::make()

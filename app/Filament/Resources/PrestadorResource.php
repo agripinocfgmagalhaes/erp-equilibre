@@ -46,9 +46,9 @@ class PrestadorResource extends Resource
     {
         return $table->columns([
             TextColumn::make('nome')->label('Nome')->searchable()->sortable()->weight('medium'),
-            TextColumn::make('especialidade')->label('Especialidade')->placeholder('—'),
-            TextColumn::make('telefone')->label('Telefone')->placeholder('—'),
-            IconColumn::make('ativo')->label('Ativo')->boolean(),
+            TextColumn::make('especialidade')->sortable()->label('Especialidade')->placeholder('—'),
+            TextColumn::make('telefone')->sortable()->label('Telefone')->placeholder('—'),
+            IconColumn::make('ativo')->sortable()->label('Ativo')->boolean(),
         ])
         ->filters([TernaryFilter::make('ativo')->trueLabel('Ativos')->falseLabel('Inativos')])
         ->headerActions([ImportAction::make()->importer(PrestadorImporter::class)->label('Importar Planilha')])

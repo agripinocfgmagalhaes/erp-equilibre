@@ -70,23 +70,6 @@ class ContaReceberResource extends Resource
         ->columns($livewire->isGridLayout() ? static::getGridTableColumns() : static::getListTableColumns())
         ->contentGrid(fn () => $livewire->isListLayout() ? null : ['md' => 2, 'lg' => 3])
         ->filters([SelectFilter::make('status')->options(['aberto' => 'Aberto', 'recebido' => 'Recebido', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado'])])
-        ->headerActions([
-            Action::make('atualizarBoletos')->label('Atualizar Boletos')->icon('heroicon-o-arrow-path')->color('gray')
-                ->action(function () {
-                    $service = app(\App\Services\InterBoletoService::class);
-                    $pendentes = ContaReceber::whereNotNull('inter_codigo_solicitacao')
-                        ->where('inter_situacao', '!=', 'RECEBIDO')
-                        ->get();
-                    foreach ($pendentes as $conta) {
-                        try {
-                            $service->consultar($conta);
-                        } catch (\Throwable $e) {
-                            // ignora falha individual e segue os demais
-                        }
-                    }
-                    Notification::make()->title($pendentes->count() . ' boleto(s) verificado(s)')->success()->send();
-                }),
-        ])
         ->recordActions([
             Action::make('darBaixa')->label('Dar Baixa')->icon('heroicon-o-check-circle')->color('success')->iconButton()
                 ->visible(fn (ContaReceber $record) => ! in_array($record->status, ['recebido', 'cancelado']))
@@ -118,12 +101,12 @@ class ContaReceberResource extends Resource
     protected static function getListTableColumns(): array
     {
         return [
-            TextColumn::make('descricao')->label('Descrição')->searchable()->weight('medium')->limit(40),
+            TextColumn::make('descricao')->sortable()->label('Descrição')->searchable()->weight('medium')->limit(40),
             TextColumn::make('cliente.nome')->label('Cliente')->searchable()->placeholder('—'),
             TextColumn::make('valor')->label('Valor')->money('BRL')->sortable(),
             TextColumn::make('valor_recebido')->label('Recebido')->money('BRL')->sortable(),
             TextColumn::make('data_vencimento')->label('Vencimento')->date('d/m/Y')->sortable(),
-            TextColumn::make('status')->label('Status')->badge()
+            TextColumn::make('status')->sortable()->label('Status')->badge()
                 ->colors(['gray' => 'aberto', 'success' => 'recebido', 'danger' => 'vencido', 'warning' => 'cancelado'])
                 ->formatStateUsing(fn ($state) => match($state) { 'aberto' => 'Aberto', 'recebido' => 'Recebido', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado', default => $state }),
         ];
@@ -133,17 +116,17 @@ class ContaReceberResource extends Resource
         return [
             Stack::make([
                 Split::make([
-                    TextColumn::make('descricao')->label('Descrição')->searchable()->weight('medium')->limit(40),
-                    TextColumn::make('status')->label('Status')->badge()
+                    TextColumn::make('descricao')->sortable()->label('Descrição')->searchable()->weight('medium')->limit(40),
+                    TextColumn::make('status')->sortable()->label('Status')->badge()
                         ->colors(['gray' => 'aberto', 'success' => 'recebido', 'danger' => 'vencido', 'warning' => 'cancelado'])
                         ->formatStateUsing(fn ($state) => match($state) { 'aberto' => 'Aberto', 'recebido' => 'Recebido', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado', default => $state })
                         ->grow(false),
                 ]),
-                TextColumn::make('cliente.nome')->label('Cliente')->description('Cliente', position: 'above')->searchable()->placeholder('—'),
+                TextColumn::make('cliente.nome')->sortable()->label('Cliente')->description('Cliente', position: 'above')->searchable()->placeholder('—'),
                 Split::make([
-                    TextColumn::make('valor')->label('Valor')->description('Valor', position: 'above')->money('BRL'),
-                    TextColumn::make('valor_recebido')->label('Recebido')->description('Recebido', position: 'above')->money('BRL'),
-                    TextColumn::make('data_vencimento')->label('Vencimento')->description('Vencimento', position: 'above')->date('d/m/Y'),
+                    TextColumn::make('valor')->sortable()->label('Valor')->description('Valor', position: 'above')->money('BRL'),
+                    TextColumn::make('valor_recebido')->sortable()->label('Recebido')->description('Recebido', position: 'above')->money('BRL'),
+                    TextColumn::make('data_vencimento')->sortable()->label('Vencimento')->description('Vencimento', position: 'above')->date('d/m/Y'),
                 ]),
             ])->space(3)->extraAttributes(['class' => 'pb-2']),
         ];

@@ -43,11 +43,11 @@ class ContaBancariaResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            TextColumn::make('nome')->label('Identificação')->searchable()->weight('medium'),
-            TextColumn::make('banco')->label('Banco')->placeholder('—'),
-            TextColumn::make('tipo')->label('Tipo')->badge()->formatStateUsing(fn ($state) => match($state) { 'corrente' => 'Conta Corrente', 'poupanca' => 'Poupança', 'caixa' => 'Caixa', default => $state }),
-            TextColumn::make('saldo_inicial')->label('Saldo Inicial')->money('BRL'),
-            IconColumn::make('ativo')->label('Ativo')->boolean(),
+            TextColumn::make('nome')->sortable()->label('Identificação')->searchable()->weight('medium'),
+            TextColumn::make('banco')->sortable()->label('Banco')->placeholder('—'),
+            TextColumn::make('tipo')->sortable()->label('Tipo')->badge()->formatStateUsing(fn ($state) => match($state) { 'corrente' => 'Conta Corrente', 'poupanca' => 'Poupança', 'caixa' => 'Caixa', default => $state }),
+            TextColumn::make('saldo_inicial')->sortable()->label('Saldo Inicial')->money('BRL'),
+            IconColumn::make('ativo')->sortable()->label('Ativo')->boolean(),
         ])
         ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])

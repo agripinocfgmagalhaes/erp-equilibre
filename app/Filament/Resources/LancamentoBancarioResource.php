@@ -49,15 +49,15 @@ class LancamentoBancarioResource extends Resource
             ->columns([
                 TextColumn::make('data')->label('Data')->date('d/m/Y')->sortable(),
                 TextColumn::make('contaBancaria.nome')->label('Conta')->sortable(),
-                TextColumn::make('descricao')->label('Descrição')->searchable()->limit(50),
-                TextColumn::make('origem')->label('Origem')->badge()
+                TextColumn::make('descricao')->sortable()->label('Descrição')->searchable()->limit(50),
+                TextColumn::make('origem')->sortable()->label('Origem')->badge()
                     ->colors(['gray' => 'manual', 'warning' => 'conta_pagar', 'success' => 'conta_receber', 'info' => 'transferencia'])
                     ->formatStateUsing(fn ($state) => match($state) { 'manual' => 'Manual', 'conta_pagar' => 'CP', 'conta_receber' => 'CR', 'transferencia' => 'Transferência', default => $state }),
-                TextColumn::make('tipo')->label('Tipo')->badge()
+                TextColumn::make('tipo')->sortable()->label('Tipo')->badge()
                     ->colors(['success' => 'entrada', 'danger' => 'saida'])
                     ->formatStateUsing(fn ($state) => $state === 'entrada' ? '▲ Entrada' : '▼ Saída'),
                 TextColumn::make('valor')->label('Valor')->money('BRL')->sortable()->color(fn ($record) => $record->tipo === 'entrada' ? 'success' : 'danger'),
-                TextColumn::make('saldo_acumulado')->label('Saldo')
+                TextColumn::make('saldo_acumulado')->sortable()->label('Saldo')
                     ->getStateUsing(function ($record, $livewire) {
                         static $saldos = null;
                         static $lastKey = null;

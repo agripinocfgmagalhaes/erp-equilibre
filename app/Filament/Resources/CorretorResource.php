@@ -47,9 +47,9 @@ class CorretorResource extends Resource
     {
         return $table->columns([
             TextColumn::make('nome')->label('Nome')->searchable()->sortable()->weight('medium'),
-            TextColumn::make('creci')->label('CRECI')->placeholder('—'),
-            TextColumn::make('celular')->label('Celular')->placeholder('—'),
-            IconColumn::make('ativo')->label('Ativo')->boolean(),
+            TextColumn::make('creci')->sortable()->label('CRECI')->placeholder('—'),
+            TextColumn::make('celular')->sortable()->label('Celular')->placeholder('—'),
+            IconColumn::make('ativo')->sortable()->label('Ativo')->boolean(),
         ])
         ->filters([TernaryFilter::make('ativo')->trueLabel('Ativos')->falseLabel('Inativos')])
         ->headerActions([ImportAction::make()->importer(CorretorImporter::class)->label('Importar Planilha')])
