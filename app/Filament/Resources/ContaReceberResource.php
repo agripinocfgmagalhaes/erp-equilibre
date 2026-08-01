@@ -70,6 +70,23 @@ class ContaReceberResource extends Resource
         ->columns($livewire->isGridLayout() ? static::getGridTableColumns() : static::getListTableColumns())
         ->contentGrid(fn () => $livewire->isListLayout() ? null : ['md' => 2, 'lg' => 3])
         ->filters([SelectFilter::make('status')->options(['aberto' => 'Aberto', 'recebido' => 'Recebido', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado'])])
+        ->headerActions([
+            Action::make('atualizarBoletos')->label('Atualizar Boletos')->icon('heroicon-o-arrow-path')->color('gray')
+                ->action(function () {
+                    $service = app(\App\Services\InterBoletoService::class);
+                    $pendentes = ContaReceber::whereNotNull('inter_codigo_solicitacao')
+                        ->where('inter_situacao', '!=', 'RECEBIDO')
+                        ->get();
+                    foreach ($pendentes as $conta) {
+                        try {
+                            $service->consultar($conta);
+                        } catch (\Throwable $e) {
+                            // ignora falha individual e segue os demais
+                        }
+                    }
+                    Notification::make()->title($pendentes->count() . ' boleto(s) verificado(s)')->success()->send();
+                }),
+        ])
         ->recordActions([
             Action::make('darBaixa')->label('Dar Baixa')->icon('heroicon-o-check-circle')->color('success')->iconButton()
                 ->visible(fn (ContaReceber $record) => ! in_array($record->status, ['recebido', 'cancelado']))

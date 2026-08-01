@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ContaReceber extends Model
 {
     protected $table = 'contas_receber';
-    protected $fillable = ['descricao','contrato_venda_id','cliente_id','plano_conta_id','conta_bancaria_id','projeto_id','valor','valor_recebido','data_vencimento','data_recebimento','status','observacoes'];
+    protected $fillable = ['descricao','contrato_venda_id','cliente_id','plano_conta_id','conta_bancaria_id','projeto_id','valor','valor_recebido','data_vencimento','data_recebimento','status','observacoes','inter_codigo_solicitacao','inter_situacao','inter_emitido_em','inter_nosso_numero','inter_linha_digitavel','inter_pix_copia_cola'];
     protected $casts = ['valor' => 'decimal:2', 'valor_recebido' => 'decimal:2', 'data_vencimento' => 'date', 'data_recebimento' => 'date'];
     public function contratoVenda(): BelongsTo { return $this->belongsTo(ContratoVenda::class); }
     public function cliente(): BelongsTo { return $this->belongsTo(Cliente::class); }

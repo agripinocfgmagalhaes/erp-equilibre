@@ -77,7 +77,7 @@ class InterBoletoService
             ->post("{$this->baseUrl}/cobranca/v3/cobrancas", $payload);
 
         if ($res->failed()) {
-            if (preg_match('/c.digo de solicita..o:\s*([a-f0-9-]{36})/i', $res->body(), $m)) {
+            if (preg_match('/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\.?"/i', $res->body(), $m)) {
                 $conta->update([
                     'inter_codigo_solicitacao' => $m[1],
                     'inter_situacao' => 'A_RECEBER',
