@@ -11,6 +11,8 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use App\Filament\Resources\LancamentoBancarioResource\Pages\ListLancamentosBancarios;
 use App\Filament\Resources\LancamentoBancarioResource\Pages\CreateLancamentoBancario;
 use App\Filament\Resources\LancamentoBancarioResource\Pages\EditLancamentoBancario;
@@ -49,8 +51,8 @@ class LancamentoBancarioResource extends Resource
                 TextColumn::make('contaBancaria.nome')->label('Conta')->sortable(),
                 TextColumn::make('descricao')->label('Descrição')->searchable()->limit(50),
                 TextColumn::make('origem')->label('Origem')->badge()
-                    ->colors(['gray' => 'manual', 'warning' => 'conta_pagar', 'success' => 'conta_receber'])
-                    ->formatStateUsing(fn ($state) => match($state) { 'manual' => 'Manual', 'conta_pagar' => 'CP', 'conta_receber' => 'CR', default => $state }),
+                    ->colors(['gray' => 'manual', 'warning' => 'conta_pagar', 'success' => 'conta_receber', 'info' => 'transferencia'])
+                    ->formatStateUsing(fn ($state) => match($state) { 'manual' => 'Manual', 'conta_pagar' => 'CP', 'conta_receber' => 'CR', 'transferencia' => 'Transferência', default => $state }),
                 TextColumn::make('tipo')->label('Tipo')->badge()
                     ->colors(['success' => 'entrada', 'danger' => 'saida'])
                     ->formatStateUsing(fn ($state) => $state === 'entrada' ? '▲ Entrada' : '▼ Saída'),
