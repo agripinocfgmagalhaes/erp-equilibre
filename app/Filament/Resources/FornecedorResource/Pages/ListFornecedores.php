@@ -1,5 +1,6 @@
 <?php
 namespace App\Filament\Resources\FornecedorResource\Pages;
+use Filament\Support\Enums\Width;
 use Asmit\ResizedColumn\HasResizableColumn;
 use Filament\Actions\CreateAction;
 use App\Filament\Resources\FornecedorResource;
@@ -9,5 +10,6 @@ class ListFornecedores extends ListRecords
 {
     use HasResizableColumn;
     protected static string $resource = FornecedorResource::class;
+    protected Width|string|null $maxContentWidth = 'full';
     protected function getHeaderActions(): array { return [CreateAction::make()->slideOver()->label('+ Novo Fornecedor')]; }
 }

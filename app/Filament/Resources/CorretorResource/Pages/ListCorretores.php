@@ -1,5 +1,6 @@
 <?php
 namespace App\Filament\Resources\CorretorResource\Pages;
+use Filament\Support\Enums\Width;
 use Asmit\ResizedColumn\HasResizableColumn;
 use Filament\Actions\CreateAction;
 use App\Filament\Resources\CorretorResource;
@@ -9,5 +10,6 @@ class ListCorretores extends ListRecords
 {
     use HasResizableColumn;
     protected static string $resource = CorretorResource::class;
+    protected Width|string|null $maxContentWidth = 'full';
     protected function getHeaderActions(): array { return [CreateAction::make()->slideOver()->label('+ Novo Corretor')]; }
 }
