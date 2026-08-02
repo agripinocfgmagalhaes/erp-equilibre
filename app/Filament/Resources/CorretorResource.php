@@ -55,7 +55,7 @@ class CorretorResource extends Resource
         ->headerActions([ImportAction::make()->importer(CorretorImporter::class)->label('Importar Planilha')])
         ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('nome');
+        ->defaultSort('nome')->dragReorderableColumns()->stickableColumns();
     }
     public static function getPages(): array
     {

@@ -22,6 +22,7 @@ use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Hydrat\TableLayoutToggle\TableLayoutTogglePlugin;
 use Hydrat\TableLayoutToggle\Persisters\CachePersister;
 use WatheqAlshowaiter\FilamentStickyTableHeader\StickyTableHeaderPlugin;
+use Asmit\ResizedColumn\ResizedColumnPlugin;
 use Filament\Tables\Table;
 
 class AdminPanelProvider extends PanelProvider
@@ -62,6 +63,7 @@ class AdminPanelProvider extends PanelProvider
                     ->enableAutoMobileLayout()
             )
             ->plugin(StickyTableHeaderPlugin::make())
+            ->plugin(ResizedColumnPlugin::make())
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

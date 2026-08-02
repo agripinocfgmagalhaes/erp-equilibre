@@ -1,5 +1,6 @@
 <?php
 namespace App\Filament\Resources\ContaPagarResource\Pages;
+use Asmit\ResizedColumn\HasResizableColumn;
 use Filament\Support\Enums\Width;
 use Filament\Actions\CreateAction;
 use App\Filament\Resources\ContaPagarResource;
@@ -8,7 +9,7 @@ use Filament\Resources\Pages\ListRecords;
 use Hydrat\TableLayoutToggle\Concerns\HasToggleableTable;
 class ListContasPagar extends ListRecords
 {
-    use HasToggleableTable;
+    use HasToggleableTable, HasResizableColumn;
     protected static string $resource = ContaPagarResource::class;
     protected Width|string|null $maxContentWidth = 'full';
     protected function getHeaderActions(): array { return [CreateAction::make()->slideOver()->modalWidth('4xl')->label('+ Novo Título')]; }

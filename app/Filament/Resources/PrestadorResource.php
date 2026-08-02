@@ -54,7 +54,7 @@ class PrestadorResource extends Resource
         ->headerActions([ImportAction::make()->importer(PrestadorImporter::class)->label('Importar Planilha')])
         ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('nome');
+        ->defaultSort('nome')->dragReorderableColumns()->stickableColumns();
     }
     public static function getPages(): array
     {

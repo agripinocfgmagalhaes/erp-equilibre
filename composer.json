@@ -7,6 +7,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "asmit/resized-column": "^4.0",
         "bezhansalleh/filament-shield": "^4.0",
         "filament/filament": "^4.0",
         "hydrat/filament-table-layout-toggle": "^4.0",

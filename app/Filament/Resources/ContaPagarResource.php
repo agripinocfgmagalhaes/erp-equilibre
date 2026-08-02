@@ -76,6 +76,7 @@ class ContaPagarResource extends Resource
         /** @var \Hydrat\TableLayoutToggle\Concerns\HasToggleableTable $livewire */
         $livewire = $table->getLivewire();
         return $table
+            ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->with(['projeto', 'planoConta', 'contaBancaria', 'faseObra']))
             ->columns($livewire->isGridLayout() ? static::getGridTableColumns() : static::getListTableColumns())
             ->contentGrid(fn () => $livewire->isListLayout() ? null : ['md' => 2, 'lg' => 3])
             ->filters([SelectFilter::make('status')->options(['aberto' => 'Aberto', 'pago' => 'Pago', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado'])])
@@ -93,16 +94,20 @@ class ContaPagarResource extends Resource
             DeleteAction::make()->iconButton(),
         ])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('data_vencimento');
+        ->defaultSort('data_vencimento')->dragReorderableColumns()->stickableColumns();
     }
     protected static function getListTableColumns(): array
     {
         return [
-            TextColumn::make('descricao')->label('Descrição')->searchable()->sortable()->weight('medium'),
-            TextColumn::make('numero_documento')->sortable()->label('Nº Doc.')->searchable()->placeholder('—'),
-            TextColumn::make('nome_contato')->label('Contato')->placeholder('—'),
-            TextColumn::make('valor')->label('Valor')->money('BRL')->alignEnd()->sortable(),
             TextColumn::make('data_vencimento')->label('Vencimento')->date('d/m/Y')->sortable(),
+            TextColumn::make('numero_documento')->sortable()->label('Nº Doc.')->searchable()->placeholder('—'),
+            TextColumn::make('projeto.nome')->sortable()->label('Projeto')->searchable()->placeholder('—')->badge()->color(fn ($record) => $record->projeto->cor ?? 'gray'),
+            TextColumn::make('planoConta.nome')->sortable()->label('Plano de Conta')->searchable()->placeholder('—'),
+            TextColumn::make('nome_contato')->sortable()->label('Contato')->placeholder('—'),
+            TextColumn::make('descricao')->label('Descrição')->searchable()->sortable()->weight('medium'),
+            TextColumn::make('faseObra.nome')->sortable()->label('Fase')->searchable()->placeholder('—'),
+            TextColumn::make('valor')->label('Valor')->money('BRL')->alignEnd()->sortable(),
+            TextColumn::make('contaBancaria.nome')->sortable()->label('Conta Bancária')->searchable()->placeholder('—'),
             TextColumn::make('status')->sortable()->label('Status')->badge()
                 ->colors(['gray' => 'aberto', 'success' => 'pago', 'danger' => 'vencido', 'secondary' => 'cancelado'])
                 ->formatStateUsing(fn ($state) => ['aberto' => 'Aberto', 'pago' => 'Pago', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado'][$state] ?? $state),

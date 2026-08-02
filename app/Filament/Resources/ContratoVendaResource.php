@@ -137,14 +137,14 @@ class ContratoVendaResource extends Resource
             DeleteAction::make(),
         ])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('created_at', 'desc');
+        ->defaultSort('created_at', 'desc')->dragReorderableColumns()->stickableColumns();
     }
     protected static function getListTableColumns(): array
     {
         return [
             TextColumn::make('numero')->label('Número')->searchable()->sortable()->weight('medium'),
             TextColumn::make('unidade.identificacao')->sortable()->label('Unidade')->searchable(),
-            TextColumn::make('unidade.projeto.nome')->sortable()->label('Empreendimento')->searchable()->badge()->color(fn ($record) => $record->projeto->cor ?? $record->unidade->projeto->cor ?? 'gray'),
+            TextColumn::make('unidade.projeto.nome')->sortable()->label('Projeto')->searchable()->badge()->color(fn ($record) => $record->projeto->cor ?? $record->unidade->projeto->cor ?? 'gray'),
             TextColumn::make('cliente.nome')->label('Cliente')->searchable()->sortable(),
             TextColumn::make('valor_venda')->label('Valor')->money('BRL')->alignEnd()->sortable(),
             TextColumn::make('data_contrato')->label('Data')->date('d/m/Y')->sortable(),
@@ -166,7 +166,7 @@ class ContratoVendaResource extends Resource
                 ]),
                 Split::make([
                     TextColumn::make('unidade.identificacao')->sortable()->label('Unidade')->description('Unidade', position: 'above')->searchable(),
-                    TextColumn::make('unidade.projeto.nome')->sortable()->label('Empreendimento')->description('Empreendimento', position: 'above')->searchable()->badge()->color(fn ($record) => $record->projeto->cor ?? $record->unidade->projeto->cor ?? 'gray'),
+                    TextColumn::make('unidade.projeto.nome')->sortable()->label('Projeto')->description('Empreendimento', position: 'above')->searchable()->badge()->color(fn ($record) => $record->projeto->cor ?? $record->unidade->projeto->cor ?? 'gray'),
                 ]),
                 TextColumn::make('cliente.nome')->sortable()->label('Cliente')->description('Cliente', position: 'above')->searchable(),
                 Split::make([

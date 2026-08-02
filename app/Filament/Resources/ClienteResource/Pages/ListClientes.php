@@ -1,5 +1,6 @@
 <?php
 namespace App\Filament\Resources\ClienteResource\Pages;
+use Asmit\ResizedColumn\HasResizableColumn;
 use Filament\Actions\CreateAction;
 use App\Filament\Resources\ClienteResource;
 use Filament\Actions;
@@ -7,7 +8,7 @@ use Filament\Resources\Pages\ListRecords;
 use Hydrat\TableLayoutToggle\Concerns\HasToggleableTable;
 class ListClientes extends ListRecords
 {
-    use HasToggleableTable;
+    use HasToggleableTable, HasResizableColumn;
     protected static string $resource = ClienteResource::class;
     protected function getHeaderActions(): array { return [CreateAction::make()->slideOver()->label('+ Novo Cliente')]; }
 }

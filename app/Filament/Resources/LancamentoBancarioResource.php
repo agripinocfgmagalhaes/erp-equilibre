@@ -105,7 +105,7 @@ class LancamentoBancarioResource extends Resource
                 EditAction::make()->slideOver()->iconButton()->visible(fn (LancamentoBancario $record) => $record->origem === 'manual'),
                 DeleteAction::make()->iconButton()->visible(fn (LancamentoBancario $record) => $record->origem === 'manual'),
             ])
-            ->toolbarActions([])->defaultSort('data', 'asc');
+            ->toolbarActions([])->defaultSort('data', 'asc')->dragReorderableColumns()->stickableColumns();
     }
     public static function getPages(): array
     {

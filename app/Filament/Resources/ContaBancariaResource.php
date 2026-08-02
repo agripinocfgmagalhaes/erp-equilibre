@@ -51,7 +51,7 @@ class ContaBancariaResource extends Resource
         ])
         ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('nome');
+        ->defaultSort('nome')->dragReorderableColumns()->stickableColumns();
     }
     public static function getPages(): array
     {

@@ -49,7 +49,7 @@ class UserResource extends Resource
         ])
         ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('name');
+        ->defaultSort('name')->dragReorderableColumns()->stickableColumns();
     }
     public static function canViewAny(): bool
     {
