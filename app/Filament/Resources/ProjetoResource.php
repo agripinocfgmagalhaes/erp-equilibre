@@ -42,6 +42,8 @@ class ProjetoResource extends Resource
                 TextInput::make('nome')->label('Nome')->required()->maxLength(150)->columnSpanFull(),
                 Select::make('status')->label('Status')->native(false)->default('planejamento')
                     ->options(['planejamento' => 'Planejamento', 'em_andamento' => 'Em Andamento', 'concluido' => 'Concluído', 'cancelado' => 'Cancelado']),
+                Select::make('cor')->label('Cor')->native(false)->default('gray')
+                    ->options(['gray' => 'Cinza', 'primary' => 'Slate', 'success' => 'Verde', 'danger' => 'Vermelho', 'warning' => 'Amarelo', 'info' => 'Azul Claro', 'blue' => 'Azul', 'purple' => 'Roxo', 'pink' => 'Rosa', 'orange' => 'Laranja']),
                 DatePicker::make('data_inicio')->label('Início')->native(false)->displayFormat('d/m/Y'),
                 DatePicker::make('data_previsao_fim')->label('Previsão de Fim')->native(false)->displayFormat('d/m/Y'),
                 Textarea::make('descricao')->label('Descrição')->rows(2)->columnSpanFull(),
@@ -92,7 +94,7 @@ class ProjetoResource extends Resource
         ->headerActions([ImportAction::make()->importer(ProjetoImporter::class)->label('Importar Planilha')])
         ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('nome')->striped();
+        ->defaultSort('nome');
     }
     public static function getPages(): array
     {

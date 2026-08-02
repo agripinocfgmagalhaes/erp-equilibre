@@ -87,12 +87,12 @@ class PedidoCompraResource extends Resource
         return $table->columns([
             TextColumn::make('numero')->label('Número')->searchable()->sortable()->weight('medium'),
             TextColumn::make('fornecedor.nome')->label('Fornecedor')->searchable()->sortable(),
-            TextColumn::make('projeto.nome')->sortable()->label('Empreendimento')->placeholder('—'),
+            TextColumn::make('projeto.nome')->sortable()->label('Empreendimento')->placeholder('—')->badge()->color(fn ($record) => $record->projeto->cor ?? $record->unidade->projeto->cor ?? 'gray'),
             TextColumn::make('status')->sortable()->label('Status')->badge()
                 ->colors(['gray' => 'rascunho', 'info' => 'aprovado', 'warning' => 'recebido_parcial', 'success' => 'recebido', 'danger' => 'cancelado'])
                 ->formatStateUsing(fn ($state) => match($state) { 'rascunho' => 'Rascunho', 'aprovado' => 'Aprovado', 'recebido_parcial' => 'Recebido Parcial', 'recebido' => 'Recebido', 'cancelado' => 'Cancelado', default => $state }),
             TextColumn::make('data_pedido')->label('Data')->date('d/m/Y')->sortable(),
-            TextColumn::make('valor_total')->label('Valor Total')->money('BRL')->sortable(),
+            TextColumn::make('valor_total')->label('Valor Total')->money('BRL')->alignEnd()->sortable(),
         ])
         ->filters([
             SelectFilter::make('status')->options(['rascunho' => 'Rascunho', 'aprovado' => 'Aprovado', 'recebido_parcial' => 'Recebido Parcial', 'recebido' => 'Recebido', 'cancelado' => 'Cancelado']),
@@ -109,7 +109,7 @@ class PedidoCompraResource extends Resource
             DeleteAction::make(),
         ])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('created_at', 'desc')->striped();
+        ->defaultSort('created_at', 'desc');
     }
     public static function getPages(): array
     {

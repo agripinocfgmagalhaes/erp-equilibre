@@ -47,14 +47,14 @@ class ProdutoResource extends Resource
             TextColumn::make('nome')->sortable()->label('Nome')->searchable()->weight('medium'),
             TextColumn::make('categoria')->sortable()->label('Categoria')->placeholder('—'),
             TextColumn::make('unidade')->sortable()->label('Unid.'),
-            TextColumn::make('preco_referencia')->sortable()->label('Preço Ref.')->money('BRL'),
+            TextColumn::make('preco_referencia')->sortable()->label('Preço Ref.')->money('BRL')->alignEnd(),
             IconColumn::make('ativo')->sortable()->label('Ativo')->boolean(),
         ])
         ->filters([TernaryFilter::make('ativo')->trueLabel('Ativos')->falseLabel('Inativos')])
         ->headerActions([ImportAction::make()->importer(ProdutoImporter::class)->label('Importar Planilha')])
         ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('nome')->striped();
+        ->defaultSort('nome');
     }
     public static function getPages(): array
     {

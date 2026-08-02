@@ -44,6 +44,7 @@ class ContaPagarResource extends Resource
         return $schema->components([
             Section::make('Dados do Título')->schema([
                 TextInput::make('descricao')->label('Descrição')->required()->maxLength(200)->columnSpanFull(),
+                TextInput::make('numero_documento')->label('Nº Documento')->maxLength(50),
                 Select::make('contato_key')->label('Contato')->options(fn () => Contato::optionsParaSelect())->searchable()->native(false)->nullable()->columnSpanFull()
                     ->afterStateHydrated(function (Select $component, $record) { if ($record?->contato_tipo && $record?->contato_id) $component->state($record->contato_tipo.'|'.$record->contato_id); })
                     ->dehydrated(false)->live()
@@ -92,14 +93,15 @@ class ContaPagarResource extends Resource
             DeleteAction::make()->iconButton(),
         ])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('data_vencimento')->striped();
+        ->defaultSort('data_vencimento');
     }
     protected static function getListTableColumns(): array
     {
         return [
             TextColumn::make('descricao')->label('Descrição')->searchable()->sortable()->weight('medium'),
+            TextColumn::make('numero_documento')->sortable()->label('Nº Doc.')->searchable()->placeholder('—'),
             TextColumn::make('nome_contato')->label('Contato')->placeholder('—'),
-            TextColumn::make('valor')->label('Valor')->money('BRL')->sortable(),
+            TextColumn::make('valor')->label('Valor')->money('BRL')->alignEnd()->sortable(),
             TextColumn::make('data_vencimento')->label('Vencimento')->date('d/m/Y')->sortable(),
             TextColumn::make('status')->sortable()->label('Status')->badge()
                 ->colors(['gray' => 'aberto', 'success' => 'pago', 'danger' => 'vencido', 'secondary' => 'cancelado'])
@@ -119,7 +121,7 @@ class ContaPagarResource extends Resource
                 ]),
                 TextColumn::make('nome_contato')->sortable()->label('Contato')->description('Contato', position: 'above')->placeholder('—'),
                 Split::make([
-                    TextColumn::make('valor')->sortable()->label('Valor')->description('Valor', position: 'above')->money('BRL'),
+                    TextColumn::make('valor')->sortable()->label('Valor')->description('Valor', position: 'above')->money('BRL')->alignEnd(),
                     TextColumn::make('data_vencimento')->sortable()->label('Vencimento')->description('Vencimento', position: 'above')->date('d/m/Y'),
                 ]),
             ])->space(3)->extraAttributes(['class' => 'pb-2']),

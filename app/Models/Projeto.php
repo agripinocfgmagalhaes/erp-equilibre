@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Projeto extends Model
 {
     protected $table = 'projetos';
-    protected $fillable = ['nome','descricao','status','data_inicio','data_previsao_fim'];
+    protected $fillable = ['nome','descricao','status','cor','data_inicio','data_previsao_fim'];
     public function unidades(): HasMany { return $this->hasMany(Unidade::class); }
     public function fasesObra(): HasMany { return $this->hasMany(FaseObra::class); }
 }

@@ -42,7 +42,7 @@ class FasePadraoResource extends Resource
         ])
         ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('ordem')->striped();
+        ->defaultSort('ordem');
     }
     public static function getPages(): array
     {
