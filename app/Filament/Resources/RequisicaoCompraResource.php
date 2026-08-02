@@ -182,14 +182,14 @@ class RequisicaoCompraResource extends Resource
             DeleteAction::make()->visible(fn (RequisicaoCompra $record) => $record->status === 'rascunho'),
         ])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('created_at', 'desc')->striped();
+        ->defaultSort('created_at', 'desc');
     }
 
     protected static function getListTableColumns(): array
     {
         return [
             TextColumn::make('numero')->label('Número')->searchable()->sortable()->weight('medium'),
-            TextColumn::make('projeto.nome')->sortable()->label('Empreendimento')->placeholder('—'),
+            TextColumn::make('projeto.nome')->sortable()->label('Empreendimento')->placeholder('—')->badge()->color(fn ($record) => $record->projeto->cor ?? $record->unidade->projeto->cor ?? 'gray'),
             TextColumn::make('solicitante.name')->sortable()->label('Encarregado')->searchable(),
             TextColumn::make('status')->sortable()->label('Status')->badge()
                 ->colors(self::STATUS_COLORS)
@@ -210,7 +210,7 @@ class RequisicaoCompraResource extends Resource
                         ->formatStateUsing(fn ($state) => self::STATUS_LABELS[$state] ?? $state)
                         ->grow(false),
                 ]),
-                TextColumn::make('projeto.nome')->sortable()->label('Empreendimento')->description('Empreendimento', position: 'above')->placeholder('—'),
+                TextColumn::make('projeto.nome')->sortable()->label('Empreendimento')->description('Empreendimento', position: 'above')->placeholder('—')->badge()->color(fn ($record) => $record->projeto->cor ?? $record->unidade->projeto->cor ?? 'gray'),
                 Split::make([
                     TextColumn::make('solicitante.name')->sortable()->label('Encarregado')->description('Encarregado', position: 'above')->searchable(),
                     TextColumn::make('data_requisicao')->sortable()->label('Data')->description('Data', position: 'above')->date('d/m/Y'),

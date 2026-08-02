@@ -46,12 +46,12 @@ class ContaBancariaResource extends Resource
             TextColumn::make('nome')->sortable()->label('Identificação')->searchable()->weight('medium'),
             TextColumn::make('banco')->sortable()->label('Banco')->placeholder('—'),
             TextColumn::make('tipo')->sortable()->label('Tipo')->badge()->formatStateUsing(fn ($state) => match($state) { 'corrente' => 'Conta Corrente', 'poupanca' => 'Poupança', 'caixa' => 'Caixa', default => $state }),
-            TextColumn::make('saldo_inicial')->sortable()->label('Saldo Inicial')->money('BRL'),
+            TextColumn::make('saldo_inicial')->sortable()->label('Saldo Inicial')->money('BRL')->alignEnd(),
             IconColumn::make('ativo')->sortable()->label('Ativo')->boolean(),
         ])
         ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('nome')->striped();
+        ->defaultSort('nome');
     }
     public static function getPages(): array
     {

@@ -137,16 +137,16 @@ class ContratoVendaResource extends Resource
             DeleteAction::make(),
         ])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('created_at', 'desc')->striped();
+        ->defaultSort('created_at', 'desc');
     }
     protected static function getListTableColumns(): array
     {
         return [
             TextColumn::make('numero')->label('Número')->searchable()->sortable()->weight('medium'),
             TextColumn::make('unidade.identificacao')->sortable()->label('Unidade')->searchable(),
-            TextColumn::make('unidade.projeto.nome')->label('Empreendimento')->searchable(),
+            TextColumn::make('unidade.projeto.nome')->sortable()->label('Empreendimento')->searchable()->badge()->color(fn ($record) => $record->projeto->cor ?? $record->unidade->projeto->cor ?? 'gray'),
             TextColumn::make('cliente.nome')->label('Cliente')->searchable()->sortable(),
-            TextColumn::make('valor_venda')->label('Valor')->money('BRL')->sortable(),
+            TextColumn::make('valor_venda')->label('Valor')->money('BRL')->alignEnd()->sortable(),
             TextColumn::make('data_contrato')->label('Data')->date('d/m/Y')->sortable(),
             TextColumn::make('status')->sortable()->label('Status')->badge()
                 ->colors(['success' => 'ativo', 'warning' => 'distratado', 'danger' => 'cancelado'])
@@ -166,11 +166,11 @@ class ContratoVendaResource extends Resource
                 ]),
                 Split::make([
                     TextColumn::make('unidade.identificacao')->sortable()->label('Unidade')->description('Unidade', position: 'above')->searchable(),
-                    TextColumn::make('unidade.projeto.nome')->sortable()->label('Empreendimento')->description('Empreendimento', position: 'above')->searchable(),
+                    TextColumn::make('unidade.projeto.nome')->sortable()->label('Empreendimento')->description('Empreendimento', position: 'above')->searchable()->badge()->color(fn ($record) => $record->projeto->cor ?? $record->unidade->projeto->cor ?? 'gray'),
                 ]),
                 TextColumn::make('cliente.nome')->sortable()->label('Cliente')->description('Cliente', position: 'above')->searchable(),
                 Split::make([
-                    TextColumn::make('valor_venda')->sortable()->label('Valor')->description('Valor', position: 'above')->money('BRL'),
+                    TextColumn::make('valor_venda')->sortable()->label('Valor')->description('Valor', position: 'above')->money('BRL')->alignEnd(),
                     TextColumn::make('data_contrato')->sortable()->label('Data')->description('Data', position: 'above')->date('d/m/Y'),
                 ]),
             ])->space(3)->extraAttributes(['class' => 'pb-2']),

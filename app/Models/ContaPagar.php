@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ContaPagar extends Model
 {
     protected $table = 'contas_pagar';
-    protected $fillable = ['descricao','contato_tipo','contato_id','plano_conta_id','conta_bancaria_id','projeto_id','fase_obra_id','pedido_compra_id','valor','valor_pago','data_vencimento','data_pagamento','status','observacoes'];
+    protected $fillable = ['descricao','numero_documento','contato_tipo','contato_id','plano_conta_id','conta_bancaria_id','projeto_id','fase_obra_id','pedido_compra_id','valor','valor_pago','data_vencimento','data_pagamento','status','observacoes'];
     protected $casts = ['valor' => 'decimal:2', 'valor_pago' => 'decimal:2', 'data_vencimento' => 'date', 'data_pagamento' => 'date'];
     public function planoConta(): BelongsTo { return $this->belongsTo(PlanoConta::class); }
     public function contaBancaria(): BelongsTo { return $this->belongsTo(ContaBancaria::class); }

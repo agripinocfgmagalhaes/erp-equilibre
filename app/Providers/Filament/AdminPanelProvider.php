@@ -21,16 +21,31 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Hydrat\TableLayoutToggle\TableLayoutTogglePlugin;
 use Hydrat\TableLayoutToggle\Persisters\CachePersister;
+use WatheqAlshowaiter\FilamentStickyTableHeader\StickyTableHeaderPlugin;
+use Filament\Tables\Table;
 
 class AdminPanelProvider extends PanelProvider
 {
+    public function boot(): void
+    {
+        Table::configureUsing(function (Table $table): void {
+            $table->paginationPageOptions([100])->defaultPaginationPageOption(100);
+        });
+    }
+
     public function panel(Panel $panel): Panel
     {
         return $panel
             ->id('admin')
             ->path('admin')
             ->login()
-            ->colors(['primary' => Color::Slate])
+            ->colors([
+                'primary' => Color::Slate,
+                'blue' => Color::Blue,
+                'purple' => Color::Purple,
+                'pink' => Color::Pink,
+                'orange' => Color::Orange,
+            ])
             ->brandName('Equilíbre ERP')
             ->sidebarCollapsibleOnDesktop()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
@@ -46,6 +61,7 @@ class AdminPanelProvider extends PanelProvider
                     ->persistLayoutUsing(persister: CachePersister::class)
                     ->enableAutoMobileLayout()
             )
+            ->plugin(StickyTableHeaderPlugin::make())
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

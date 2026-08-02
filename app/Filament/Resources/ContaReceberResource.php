@@ -44,6 +44,7 @@ class ContaReceberResource extends Resource
         return $schema->components([
             Section::make('Dados do Título')->schema([
                 TextInput::make('descricao')->label('Descrição')->required()->maxLength(200)->columnSpanFull(),
+                TextInput::make('numero_documento')->label('Nº Documento')->maxLength(50),
                 Select::make('cliente_id')->label('Cliente')->options(Cliente::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->nullable(),
                 Select::make('plano_conta_id')->label('Plano de Conta')->options(PlanoConta::where('tipo', 'receita')->where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->nullable(),
                 Select::make('conta_bancaria_id')->label('Conta Bancária')->options(ContaBancaria::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->nullable(),
@@ -67,6 +68,7 @@ class ContaReceberResource extends Resource
         /** @var \Hydrat\TableLayoutToggle\Concerns\HasToggleableTable $livewire */
         $livewire = $table->getLivewire();
         return $table
+        ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->with(['projeto', 'planoConta', 'cliente', 'contaBancaria']))
         ->columns($livewire->isGridLayout() ? static::getGridTableColumns() : static::getListTableColumns())
         ->contentGrid(fn () => $livewire->isListLayout() ? null : ['md' => 2, 'lg' => 3])
         ->filters([SelectFilter::make('status')->options(['aberto' => 'Aberto', 'recebido' => 'Recebido', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado'])])
@@ -96,16 +98,19 @@ class ContaReceberResource extends Resource
             DeleteAction::make()->iconButton(),
         ])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('data_vencimento')->striped();
+        ->defaultSort('data_vencimento');
     }
     protected static function getListTableColumns(): array
     {
         return [
-            TextColumn::make('descricao')->sortable()->label('Descrição')->searchable()->weight('medium')->limit(40),
-            TextColumn::make('cliente.nome')->label('Cliente')->searchable()->placeholder('—'),
-            TextColumn::make('valor')->label('Valor')->money('BRL')->sortable(),
-            TextColumn::make('valor_recebido')->label('Recebido')->money('BRL')->sortable(),
             TextColumn::make('data_vencimento')->label('Vencimento')->date('d/m/Y')->sortable(),
+            TextColumn::make('numero_documento')->sortable()->label('Nº Doc.')->searchable()->placeholder('—'),
+            TextColumn::make('projeto.nome')->sortable()->label('Empreendimento')->searchable()->placeholder('—')->badge()->color(fn ($record) => $record->projeto->cor ?? $record->unidade->projeto->cor ?? 'gray'),
+            TextColumn::make('planoConta.nome')->sortable()->label('Plano de Conta')->searchable()->placeholder('—'),
+            TextColumn::make('cliente.nome')->label('Cliente')->searchable()->placeholder('—'),
+            TextColumn::make('descricao')->sortable()->label('Descrição')->searchable()->weight('medium')->limit(40),
+            TextColumn::make('valor')->label('Valor')->money('BRL')->alignEnd()->sortable(),
+            TextColumn::make('contaBancaria.nome')->label('Conta Bancária')->searchable()->placeholder('—'),
             TextColumn::make('status')->sortable()->label('Status')->badge()
                 ->colors(['gray' => 'aberto', 'success' => 'recebido', 'danger' => 'vencido', 'warning' => 'cancelado'])
                 ->formatStateUsing(fn ($state) => match($state) { 'aberto' => 'Aberto', 'recebido' => 'Recebido', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado', default => $state }),
@@ -124,8 +129,8 @@ class ContaReceberResource extends Resource
                 ]),
                 TextColumn::make('cliente.nome')->sortable()->label('Cliente')->description('Cliente', position: 'above')->searchable()->placeholder('—'),
                 Split::make([
-                    TextColumn::make('valor')->sortable()->label('Valor')->description('Valor', position: 'above')->money('BRL'),
-                    TextColumn::make('valor_recebido')->sortable()->label('Recebido')->description('Recebido', position: 'above')->money('BRL'),
+                    TextColumn::make('valor')->sortable()->label('Valor')->description('Valor', position: 'above')->money('BRL')->alignEnd(),
+                    TextColumn::make('valor_recebido')->sortable()->label('Recebido')->description('Recebido', position: 'above')->money('BRL')->alignEnd(),
                     TextColumn::make('data_vencimento')->sortable()->label('Vencimento')->description('Vencimento', position: 'above')->date('d/m/Y'),
                 ]),
             ])->space(3)->extraAttributes(['class' => 'pb-2']),

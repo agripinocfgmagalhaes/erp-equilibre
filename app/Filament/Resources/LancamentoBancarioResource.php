@@ -56,7 +56,7 @@ class LancamentoBancarioResource extends Resource
                 TextColumn::make('tipo')->sortable()->label('Tipo')->badge()
                     ->colors(['success' => 'entrada', 'danger' => 'saida'])
                     ->formatStateUsing(fn ($state) => $state === 'entrada' ? '▲ Entrada' : '▼ Saída'),
-                TextColumn::make('valor')->label('Valor')->money('BRL')->sortable()->color(fn ($record) => $record->tipo === 'entrada' ? 'success' : 'danger'),
+                TextColumn::make('valor')->label('Valor')->money('BRL')->alignEnd()->sortable()->color(fn ($record) => $record->tipo === 'entrada' ? 'success' : 'danger'),
                 TextColumn::make('saldo_acumulado')->sortable()->label('Saldo')
                     ->getStateUsing(function ($record, $livewire) {
                         static $saldos = null;
