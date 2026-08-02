@@ -98,19 +98,19 @@ class ContaReceberResource extends Resource
             DeleteAction::make()->iconButton(),
         ])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('data_vencimento');
+        ->defaultSort('data_vencimento')->dragReorderableColumns()->stickableColumns();
     }
     protected static function getListTableColumns(): array
     {
         return [
             TextColumn::make('data_vencimento')->label('Vencimento')->date('d/m/Y')->sortable(),
             TextColumn::make('numero_documento')->sortable()->label('Nº Doc.')->searchable()->placeholder('—'),
-            TextColumn::make('projeto.nome')->sortable()->label('Empreendimento')->searchable()->placeholder('—')->badge()->color(fn ($record) => $record->projeto->cor ?? $record->unidade->projeto->cor ?? 'gray'),
+            TextColumn::make('projeto.nome')->sortable()->label('Projeto')->searchable()->placeholder('—')->badge()->color(fn ($record) => $record->projeto->cor ?? $record->unidade->projeto->cor ?? 'gray'),
             TextColumn::make('planoConta.nome')->sortable()->label('Plano de Conta')->searchable()->placeholder('—'),
-            TextColumn::make('cliente.nome')->label('Cliente')->searchable()->placeholder('—'),
+            TextColumn::make('cliente.nome')->sortable()->label('Cliente')->searchable()->placeholder('—'),
             TextColumn::make('descricao')->sortable()->label('Descrição')->searchable()->weight('medium')->limit(40),
             TextColumn::make('valor')->label('Valor')->money('BRL')->alignEnd()->sortable(),
-            TextColumn::make('contaBancaria.nome')->label('Conta Bancária')->searchable()->placeholder('—'),
+            TextColumn::make('contaBancaria.nome')->sortable()->label('Conta Bancária')->searchable()->placeholder('—'),
             TextColumn::make('status')->sortable()->label('Status')->badge()
                 ->colors(['gray' => 'aberto', 'success' => 'recebido', 'danger' => 'vencido', 'warning' => 'cancelado'])
                 ->formatStateUsing(fn ($state) => match($state) { 'aberto' => 'Aberto', 'recebido' => 'Recebido', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado', default => $state }),

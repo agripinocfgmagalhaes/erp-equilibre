@@ -51,7 +51,7 @@ class PlanoContaResource extends Resource
         ->filters([SelectFilter::make('tipo')->options(['despesa' => 'Despesa', 'receita' => 'Receita'])])
         ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-        ->defaultSort('codigo');
+        ->defaultSort('codigo')->dragReorderableColumns()->stickableColumns();
     }
     public static function getPages(): array
     {

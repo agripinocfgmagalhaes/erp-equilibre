@@ -1,5 +1,6 @@
 <?php
 namespace App\Filament\Resources\LancamentoBancarioResource\Pages;
+use Asmit\ResizedColumn\HasResizableColumn;
 use Filament\Support\Enums\Width;
 use Filament\Actions\CreateAction;
 use Filament\Actions\Action;
@@ -14,6 +15,7 @@ use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 class ListLancamentosBancarios extends ListRecords
 {
+    use HasResizableColumn;
     protected static string $resource = LancamentoBancarioResource::class;
     protected Width|string|null $maxContentWidth = 'full';
     protected function getHeaderActions(): array

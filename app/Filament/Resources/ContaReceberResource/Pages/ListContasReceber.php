@@ -1,5 +1,6 @@
 <?php
 namespace App\Filament\Resources\ContaReceberResource\Pages;
+use Asmit\ResizedColumn\HasResizableColumn;
 use Filament\Support\Enums\Width;
 use Filament\Actions\CreateAction;
 use Filament\Actions\Action;
@@ -12,7 +13,7 @@ use Filament\Resources\Pages\ListRecords;
 use Hydrat\TableLayoutToggle\Concerns\HasToggleableTable;
 class ListContasReceber extends ListRecords
 {
-    use HasToggleableTable;
+    use HasToggleableTable, HasResizableColumn;
     protected static string $resource = ContaReceberResource::class;
     protected Width|string|null $maxContentWidth = 'full';
     protected function getHeaderActions(): array
