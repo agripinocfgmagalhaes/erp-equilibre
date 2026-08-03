@@ -10,4 +10,21 @@ class Medicao extends Model
     public function ordemServico(): BelongsTo { return $this->belongsTo(OrdenServico::class); }
     public function usuario(): BelongsTo { return $this->belongsTo(User::class, 'usuario_medicao_id'); }
     public function contaPagar(): BelongsTo { return $this->belongsTo(ContaPagar::class); }
+
+    public function aprovarEGerarContaPagar(): void
+    {
+        $this->update(["status" => "aprovada", "data_aprovacao" => now()]);
+        $contaPagar = ContaPagar::create([
+            "descricao" => "Medição ".$this->numero." - OS ".$this->ordemServico->numero,
+            "contato_tipo" => $this->ordemServico->prestador_id ? "prestador" : null,
+            "contato_id" => $this->ordemServico->prestador_id,
+            "projeto_id" => $this->ordemServico->projeto_id,
+            "fase_obra_id" => $this->ordemServico->fase_obra_id,
+            "valor" => $this->valor_total,
+            "valor_pago" => 0,
+            "status" => "aberto",
+            "data_vencimento" => now()->addDays(30)->toDateString(),
+        ]);
+        $this->update(["status" => "faturada", "conta_pagar_id" => $contaPagar->id]);
+    }
 }
