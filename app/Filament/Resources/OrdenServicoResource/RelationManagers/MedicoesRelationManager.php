@@ -14,7 +14,6 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Support\RawJs;
-use App\Models\ContaPagar;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Table;
 
@@ -62,20 +61,8 @@ class MedicoesRelationManager extends RelationManager
                 EditAction::make()->slideOver()->iconButton(),
                 Action::make('aprovar')->label('Aprovar')->icon('heroicon-o-check')->color('success')
                     ->visible(fn ($record) => $record->status === 'medida' && !$record->conta_pagar_id)
-                    ->action(function ($record) {
-                        $record->update(['status' => 'aprovada', 'data_aprovacao' => now()]);
-                        ContaPagar::create([
-                            'projeto_id' => $record->ordemServico->projeto_id,
-                            'prestador_id' => $record->ordemServico->prestador_id,
-                            'descricao' => 'Medição '.$record->numero.' - OS '.$record->ordemServico->numero,
-                            'valor_bruto' => $record->valor_total,
-                            'valor_pago' => 0,
-                            'status' => 'pendente',
-                            'data_vencimento' => now()->addDays(30)->toDateString(),
-                            'ordem_servico_id' => $record->ordem_servico_id,
-                        ]);
-                        $record->update(['status' => 'faturada']);
-                    })
+                    ->requiresConfirmation()
+                    ->action(fn ($record) => $record->aprovarEGerarContaPagar())
                     ->successNotification(\Filament\Notifications\Notification::make()->success()->title('Medição aprovada')),
                 DeleteAction::make()->iconButton()->visible(fn ($record) => $record->status === 'rascunho'),
             ])
