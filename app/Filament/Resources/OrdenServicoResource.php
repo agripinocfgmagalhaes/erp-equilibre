@@ -33,7 +33,7 @@ class OrdenServicoResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Dados Gerais')->schema([
+            Section::make('Dados Gerais')->columnSpanFull()->schema([
                 TextInput::make('numero')->label('Número da OS')->required()->unique(ignoreRecord: true)->maxLength(20),
                 DatePicker::make('data')->label('Data')->required()->native(false)->displayFormat('d/m/Y'),
                 Select::make('projeto_id')->label('Empreendimento')->native(false)->searchable()->required()
@@ -46,7 +46,7 @@ class OrdenServicoResource extends Resource
                     ->options(['planejado' => 'Planejado', 'em_execucao' => 'Em Execução', 'concluido' => 'Concluído', 'suspenso' => 'Suspenso']),
                 Textarea::make('descricao')->label('Descrição')->rows(2)->columnSpanFull(),
             ])->columns(2),
-            Section::make('Valores e Datas')->schema([
+            Section::make('Valores e Datas')->columnSpanFull()->schema([
                 TextInput::make('valor_total')->label('Valor Total')->numeric()->prefix('R$')->step(0.01)->required()
                     ->mask(RawJs::make('$money($input, \',\', \'.\')'))->stripCharacters('.')
                     ->dehydrateStateUsing(fn ($state) => $state !== null ? (float) str_replace(',', '.', $state) : null)

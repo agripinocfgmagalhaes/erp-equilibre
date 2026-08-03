@@ -7,7 +7,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Actions\Action;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
@@ -76,7 +76,7 @@ class MedicoesRelationManager extends RelationManager
                         ]);
                         $record->update(['status' => 'faturada']);
                     })
-                    ->successNotification(),
+                    ->successNotification(\Filament\Notifications\Notification::make()->success()->title('Medição aprovada')),
                 DeleteAction::make()->iconButton()->visible(fn ($record) => $record->status === 'rascunho'),
             ])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
