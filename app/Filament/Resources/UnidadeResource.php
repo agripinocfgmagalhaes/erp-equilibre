@@ -65,7 +65,7 @@ class UnidadeResource extends Resource
                 DeleteAction::make()->iconButton(),
             ])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-            ->defaultSort('identificacao');
+            ->defaultSort('identificacao')->dragReorderableColumns()->stickableColumns();
     }
 
     public static function getPages(): array
