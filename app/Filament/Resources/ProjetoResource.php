@@ -15,17 +15,16 @@ use Filament\Actions\DeleteBulkAction;
 use App\Filament\Resources\ProjetoResource\Pages\ListProjetos;
 use App\Filament\Resources\ProjetoResource\Pages\CreateProjeto;
 use App\Filament\Resources\ProjetoResource\Pages\EditProjeto;
-use App\Filament\Resources\ProjetoResource\Pages;
 use Filament\Support\RawJs;
 use App\Filament\Imports\ProjetoImporter;
-use App\Filament\Imports\UnidadeImporter;
 use App\Models\Projeto;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Repeater\TableColumn;
+use App\Filament\Resources\ProjetoResource\RelationManagers\UnidadesRelationManager;
+use App\Filament\Resources\ProjetoResource\RelationManagers\FasesObraRelationManager;
+
 class ProjetoResource extends Resource
 {
     protected static ?string $model = Projeto::class;
@@ -35,6 +34,7 @@ class ProjetoResource extends Resource
     protected static bool $shouldRegisterNavigation = false;
     protected static ?int $navigationSort = 1;
     protected static ?string $slug = 'projetos';
+
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
@@ -46,41 +46,16 @@ class ProjetoResource extends Resource
                     ->options(['gray' => 'Cinza', 'primary' => 'Slate', 'success' => 'Verde', 'danger' => 'Vermelho', 'warning' => 'Amarelo', 'info' => 'Azul Claro', 'blue' => 'Azul', 'purple' => 'Roxo', 'pink' => 'Rosa', 'orange' => 'Laranja']),
                 DatePicker::make('data_inicio')->label('Início')->native(false)->displayFormat('d/m/Y'),
                 DatePicker::make('data_previsao_fim')->label('Previsão de Fim')->native(false)->displayFormat('d/m/Y'),
+                TextInput::make('valor_orcamento')->label('Orçamento Total da Obra')->numeric()->prefix('R$')->step(0.01)
+                    ->mask(RawJs::make('$money($input, \',\', \'.\')'))->stripCharacters('.')
+                    ->dehydrateStateUsing(fn ($state) => $state !== null && $state !== '' ? (float) str_replace(',', '.', $state) : null)
+                    ->formatStateUsing(fn ($state) => $state !== null ? number_format((float) $state, 2, ',', '.') : null)
+                    ->helperText('Base para o % de avanço financeiro'),
                 Textarea::make('descricao')->label('Descrição')->rows(2)->columnSpanFull(),
             ])->columns(2)->columnSpanFull(),
-            Section::make('Fases da Obra')->schema([
-                Repeater::make('fasesObra')->relationship()->label('')
-                    ->table([TableColumn::make('Nome')->width('300px'), TableColumn::make('Ordem')->width('80px'), TableColumn::make('% Conclusão')->width('120px')])
-                    ->schema([
-                        TextInput::make('nome')->label('Nome')->required()->maxLength(100),
-                        TextInput::make('ordem')->label('Ordem')->numeric()->default(0),
-                        TextInput::make('percentual')->label('%')->numeric()->step(0.01)->default(0),
-                    ])->addActionLabel('+ Fase')->columnSpanFull()->defaultItems(0),
-            ])->columnSpanFull(),
-            Section::make('Unidades')
-                ->headerActions([
-                    ImportAction::make('importarUnidades')->label('Importar Planilha')->importer(UnidadeImporter::class)
-                        ->visible(fn (?Projeto $record) => (bool) $record)
-                        ->options(fn (?Projeto $record) => ['projeto_id' => $record?->id]),
-                ])
-                ->schema([
-                Repeater::make('unidades')->relationship()->label('')
-                    ->table([TableColumn::make('ID')->width('90px'), TableColumn::make('Tipo')->width('150px'), TableColumn::make('Área (m²)')->width('100px'), TableColumn::make('Valor Tabela')->width('170px'), TableColumn::make('Status')->width('170px')])
-                    ->schema([
-                        TextInput::make('identificacao')->label('ID')->required()->maxLength(20),
-                        Select::make('tipo')->label('Tipo')->native(false)->default('apartamento')
-                            ->options(['apartamento' => 'Apartamento', 'casa' => 'Casa', 'terreno' => 'Terreno', 'comercial' => 'Comercial']),
-                        TextInput::make('area')->label('Área')->numeric()->step(0.01),
-                        TextInput::make('valor_tabela')->label('Valor')->numeric()->prefix('R$')->step(0.01)->default(0)
-                            ->mask(RawJs::make('$money($input, \',\', \'.\')'))->stripCharacters('.')
-                            ->dehydrateStateUsing(fn ($state) => $state !== null ? (float) str_replace(',', '.', $state) : null)
-                            ->formatStateUsing(fn ($state) => $state !== null ? number_format((float) $state, 2, ',', '.') : null),
-                        Select::make('status')->label('Status')->native(false)->default('disponivel')
-                            ->options(['disponivel' => 'Disponível', 'reservado' => 'Reservado', 'vendido' => 'Vendido', 'distratado' => 'Distratado']),
-                    ])->addActionLabel('+ Unidade')->columnSpanFull()->defaultItems(0)->cloneable(),
-            ])->columnSpanFull(),
         ]);
     }
+
     public static function table(Table $table): Table
     {
         return $table->columns([
@@ -90,14 +65,26 @@ class ProjetoResource extends Resource
                 ->formatStateUsing(fn ($state) => match($state) { 'planejamento' => 'Planejamento', 'em_andamento' => 'Em Andamento', 'concluido' => 'Concluído', 'cancelado' => 'Cancelado', default => $state }),
             TextColumn::make('data_inicio')->sortable()->label('Início')->date('d/m/Y')->placeholder('—'),
             TextColumn::make('data_previsao_fim')->sortable()->label('Previsão Fim')->date('d/m/Y')->placeholder('—'),
+            TextColumn::make('avanco_fisico')->label('Avanço Físico')->state(fn ($record) => $record->avancoFisico().'%')->badge()
+                ->color(fn ($record) => match (true) { $record->avancoFisico() >= 100 => 'success', $record->avancoFisico() >= 50 => 'info', $record->avancoFisico() > 0 => 'warning', default => 'gray' }),
         ])
         ->headerActions([ImportAction::make()->importer(ProjetoImporter::class)->label('Importar Planilha')])
-        ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
+        ->recordActions([EditAction::make(), DeleteAction::make()])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
         ->defaultSort('nome')->dragReorderableColumns()->stickableColumns();
     }
+
+    public static function getRelations(): array
+    {
+        return [UnidadesRelationManager::class, FasesObraRelationManager::class];
+    }
+
     public static function getPages(): array
     {
-        return ['index' => ListProjetos::route('/')];
+        return [
+            'index' => ListProjetos::route('/'),
+            'create' => CreateProjeto::route('/create'),
+            'edit' => EditProjeto::route('/{record}/edit'),
+        ];
     }
 }
