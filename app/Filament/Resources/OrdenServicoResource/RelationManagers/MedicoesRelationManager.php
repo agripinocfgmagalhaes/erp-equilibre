@@ -26,7 +26,9 @@ class MedicoesRelationManager extends RelationManager
     public function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('numero')->label('Nº Medição')->numeric()->default(1)->disabled(),
+            TextInput::make('numero')->label('Nº Medição')->numeric()
+                ->default(fn ($livewire) => ($livewire->getOwnerRecord()->medicoes()->max('numero') ?? 0) + 1)
+                ->disabled()->dehydrated(),
             DatePicker::make('data_medicao')->label('Data da Medição')->required()->native(false)->displayFormat('d/m/Y'),
             DatePicker::make('data_inicio_periodo')->label('Período Início')->required()->native(false)->displayFormat('d/m/Y'),
             DatePicker::make('data_fim_periodo')->label('Período Fim')->required()->native(false)->displayFormat('d/m/Y'),
