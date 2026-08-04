@@ -37,11 +37,11 @@ class OrdenServicoResource extends Resource
                 TextInput::make('numero')->label('Número da OS')->required()->unique(ignoreRecord: true)->maxLength(20),
                 DatePicker::make('data')->label('Data')->required()->native(false)->displayFormat('d/m/Y'),
                 Select::make('projeto_id')->label('Empreendimento')->native(false)->searchable()->required()
-                    ->relationship('projeto', 'nome'),
+                    ->options(fn () => \App\Models\Projeto::pluck('nome', 'id'))->reactive()->afterStateUpdated(fn ($set) => $set('fase_obra_id', null)),
                 Select::make('prestador_id')->label('Prestador/Empreiteiro')->native(false)->searchable()
                     ->options(Prestador::orderBy('nome')->pluck('nome', 'id')),
                 Select::make('fase_obra_id')->label('Fase da Obra')->native(false)
-                    ->relationship('faseObra', 'nome'),
+                    ->options(fn ($get) => \App\Models\FaseObra::where('projeto_id', $get('projeto_id'))->pluck('nome', 'id'))->disabled(fn ($get) => ! $get('projeto_id')),
                 Select::make('status')->label('Status')->native(false)->default('planejado')->required()
                     ->options(['planejado' => 'Planejado', 'em_execucao' => 'Em Execução', 'concluido' => 'Concluído', 'suspenso' => 'Suspenso']),
                 Textarea::make('descricao')->label('Descrição')->rows(2)->columnSpanFull(),
