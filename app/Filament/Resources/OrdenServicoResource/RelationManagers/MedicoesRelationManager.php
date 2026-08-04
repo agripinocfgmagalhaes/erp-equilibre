@@ -30,9 +30,8 @@ class MedicoesRelationManager extends RelationManager
             DatePicker::make('data_medicao')->label('Data da Medição')->required()->native(false)->displayFormat('d/m/Y'),
             DatePicker::make('data_inicio_periodo')->label('Período Início')->required()->native(false)->displayFormat('d/m/Y'),
             DatePicker::make('data_fim_periodo')->label('Período Fim')->required()->native(false)->displayFormat('d/m/Y'),
-            TextInput::make('valor_total')->label('Valor Medido')->numeric()->prefix('R$')->required()
+            TextInput::make('valor_total')->label('Valor Medido')->prefix('R$')->required()
                 ->mask(RawJs::make('$money($input, \',\', \'.\')'))->extraInputAttributes(['type' => 'text'])
-                ->stripCharacters('.')
                 ->dehydrateStateUsing(fn ($state) => $state !== null ? (float) str_replace(['.', ','], ['', '.'], $state) : null)
                 ->formatStateUsing(fn ($state) => $state !== null ? number_format((float) $state, 2, ',', '.') : null),
             Select::make('status')->label('Status')->native(false)->default('rascunho')->required()
