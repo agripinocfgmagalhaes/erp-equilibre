@@ -29,9 +29,10 @@ class UnidadesRelationManager extends RelationManager
             Select::make('tipo')->label('Tipo')->native(false)->default('apartamento')
                 ->options(['apartamento' => 'Apartamento', 'casa' => 'Casa', 'terreno' => 'Terreno', 'comercial' => 'Comercial']),
             TextInput::make('area')->label('Área (m²)')->numeric()->step(0.01),
-            TextInput::make('valor_tabela')->label('Valor de Tabela')->numeric()->prefix('R$')->step(0.01)->default(0)
-                ->mask(RawJs::make('$money($input, \',\', \'.\')'))->stripCharacters('.')
-                ->dehydrateStateUsing(fn ($state) => $state !== null ? (float) str_replace(',', '.', $state) : null)
+            TextInput::make('valor_tabela')->label('Valor de Tabela')->prefix('R$')->default(0)
+                ->mask(RawJs::make('$money($input, \',\', \'.\')'))->extraInputAttributes(['type' => 'text'])
+                ->stripCharacters('.')
+                ->dehydrateStateUsing(fn ($state) => $state !== null ? (float) str_replace(['.', ','], ['', '.'], $state) : null)
                 ->formatStateUsing(fn ($state) => $state !== null ? number_format((float) $state, 2, ',', '.') : null),
             Select::make('status')->label('Status')->native(false)->default('disponivel')
                 ->options(['disponivel' => 'Disponível', 'reservado' => 'Reservado', 'vendido' => 'Vendido', 'distratado' => 'Distratado']),

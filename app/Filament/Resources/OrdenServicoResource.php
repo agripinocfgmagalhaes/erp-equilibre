@@ -47,9 +47,9 @@ class OrdenServicoResource extends Resource
                 Textarea::make('descricao')->label('Descrição')->rows(2)->columnSpanFull(),
             ])->columns(2),
             Section::make('Valores e Datas')->columnSpanFull()->schema([
-                TextInput::make('valor_total')->label('Valor Total')->numeric()->prefix('R$')->step(0.01)->required()
-                    ->mask(RawJs::make('$money($input, \',\', \'.\')'))->stripCharacters('.')
-                    ->dehydrateStateUsing(fn ($state) => $state !== null ? (float) str_replace(',', '.', $state) : null)
+                TextInput::make('valor_total')->label('Valor Total')->prefix('R$')->required()
+                    ->mask(RawJs::make('$money($input, \',\', \'.\')'))->extraInputAttributes(['type' => 'text'])
+                    ->dehydrateStateUsing(fn ($state) => $state !== null ? (float) str_replace(['.', ','], ['', '.'], $state) : null)
                     ->formatStateUsing(fn ($state) => $state !== null ? number_format((float) $state, 2, ',', '.') : null),
                 DatePicker::make('data_inicio')->label('Início Previsto')->native(false)->displayFormat('d/m/Y'),
                 DatePicker::make('data_previsao_fim')->label('Fim Previsto')->native(false)->displayFormat('d/m/Y'),

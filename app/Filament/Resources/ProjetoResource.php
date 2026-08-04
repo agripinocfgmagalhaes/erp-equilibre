@@ -46,9 +46,11 @@ class ProjetoResource extends Resource
                     ->options(['gray' => 'Cinza', 'primary' => 'Slate', 'success' => 'Verde', 'danger' => 'Vermelho', 'warning' => 'Amarelo', 'info' => 'Azul Claro', 'blue' => 'Azul', 'purple' => 'Roxo', 'pink' => 'Rosa', 'orange' => 'Laranja']),
                 DatePicker::make('data_inicio')->label('Início')->native(false)->displayFormat('d/m/Y'),
                 DatePicker::make('data_previsao_fim')->label('Previsão de Fim')->native(false)->displayFormat('d/m/Y'),
-                TextInput::make('valor_orcamento')->label('Orçamento Total da Obra')->numeric()->prefix('R$')->step(0.01)
-                    ->mask(RawJs::make('$money($input, \',\', \'.\')'))->stripCharacters('.')
-                    ->dehydrateStateUsing(fn ($state) => $state !== null && $state !== '' ? (float) str_replace(',', '.', $state) : null)
+                TextInput::make('valor_orcamento')->label('Orçamento Total da Obra')->numeric()->prefix('R$')
+                    ->mask(RawJs::make('$money($input, \',\', \'.\')'))->extraInputAttributes(['type' => 'text'])
+                    ->stripCharacters('.')
+                    ->extraInputAttributes(['type' => 'text'])
+                    ->dehydrateStateUsing(fn ($state) => $state !== null && $state !== '' ? (float) str_replace(['.', ','], ['', '.'], $state) : null)
                     ->formatStateUsing(fn ($state) => $state !== null ? number_format((float) $state, 2, ',', '.') : null)
                     ->helperText('Base para o % de avanço financeiro'),
                 Textarea::make('descricao')->label('Descrição')->rows(2)->columnSpanFull(),
