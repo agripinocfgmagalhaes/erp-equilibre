@@ -1,6 +1,7 @@
 <?php
 namespace App\Filament\Resources;
 use Filament\Schemas\Schema;
+use Filament\Support\RawJs;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
@@ -33,7 +34,10 @@ class MedicaoResource extends Resource
             DatePicker::make('data_medicao')->label('Data da Medição')->required()->native(false)->displayFormat('d/m/Y'),
             DatePicker::make('data_inicio_periodo')->label('Período Início')->required()->native(false)->displayFormat('d/m/Y'),
             DatePicker::make('data_fim_periodo')->label('Período Fim')->required()->native(false)->displayFormat('d/m/Y'),
-            TextInput::make('valor_total')->label('Valor Medido')->numeric()->prefix('R$')->step(0.01)->required(),
+            TextInput::make('valor_total')->label('Valor Medido')->prefix('R$')->required()
+                ->mask(RawJs::make('$money($input, \',\', \'.\')'))->extraInputAttributes(['type' => 'text'])
+                ->dehydrateStateUsing(fn ($state) => $state !== null ? (float) str_replace(['.', ','], ['', '.'], $state) : null)
+                ->formatStateUsing(fn ($state) => $state !== null ? number_format((float) $state, 2, ',', '.') : null),
             Textarea::make('observacoes')->label('Observações')->rows(2)->columnSpanFull(),
         ])->columns(2);
     }
