@@ -12,6 +12,7 @@ class OrdenServico extends Model
     public function prestador(): BelongsTo { return $this->belongsTo(Prestador::class); }
     public function faseObra(): BelongsTo { return $this->belongsTo(FaseObra::class, 'fase_obra_id'); }
     public function medicoes(): HasMany { return $this->hasMany(Medicao::class, 'ordem_servico_id'); }
+    public function itens(): HasMany { return $this->hasMany(OrdenServicoItem::class, 'ordem_servico_id'); }
     public function contasPagar(): HasMany { return $this->hasMany(ContaPagar::class, 'ordem_servico_id'); }
     public function valorMedido(): float
     {

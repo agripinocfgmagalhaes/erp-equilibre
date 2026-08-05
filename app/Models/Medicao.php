@@ -10,21 +10,36 @@ class Medicao extends Model
     public function ordemServico(): BelongsTo { return $this->belongsTo(OrdenServico::class); }
     public function usuario(): BelongsTo { return $this->belongsTo(User::class, 'usuario_medicao_id'); }
     public function contaPagar(): BelongsTo { return $this->belongsTo(ContaPagar::class); }
+    public function itens() { return $this->hasMany(MedicaoItem::class); }
 
     public function aprovarEGerarContaPagar(): void
     {
-        $this->update(["status" => "aprovada", "data_aprovacao" => now()]);
+        $os = $this->ordemServico;
+        $percentualAcumulado = $os->valor_total > 0
+            ? round((($os->valorMedido() + (float) $this->valor_total) / (float) $os->valor_total) * 100, 2)
+            : 0;
+        $this->update(["status" => "aprovada", "data_aprovacao" => now(), "percentual_acumulado" => $percentualAcumulado]);
         $contaPagar = ContaPagar::create([
-            "descricao" => "Medição ".$this->numero." - OS ".$this->ordemServico->numero,
-            "contato_tipo" => $this->ordemServico->prestador_id ? "prestador" : null,
-            "contato_id" => $this->ordemServico->prestador_id,
-            "projeto_id" => $this->ordemServico->projeto_id,
-            "fase_obra_id" => $this->ordemServico->fase_obra_id,
+            "descricao" => "Medição ".$this->numero." - OS ".$os->numero,
+            "contato_tipo" => $os->prestador_id ? "prestador" : null,
+            "contato_id" => $os->prestador_id,
+            "projeto_id" => $os->projeto_id,
+            "fase_obra_id" => $os->fase_obra_id,
+            "ordem_servico_id" => $os->id,
             "valor" => $this->valor_total,
             "valor_pago" => 0,
             "status" => "aberto",
             "data_vencimento" => now()->addDays(30)->toDateString(),
         ]);
         $this->update(["status" => "faturada", "conta_pagar_id" => $contaPagar->id]);
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Medicao $medicao) {
+            if (! $medicao->usuario_medicao_id && auth()->check()) {
+                $medicao->usuario_medicao_id = auth()->id();
+            }
+        });
     }
 }

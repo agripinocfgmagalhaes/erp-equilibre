@@ -59,7 +59,7 @@ class MedicaoResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('status')->options(['rascunho' => 'Rascunho', 'medida' => 'Medida', 'aprovada' => 'Aprovada', 'faturada' => 'Faturada', 'paga' => 'Paga']),
-                SelectFilter::make('ordemServico.projeto_id')->label('Empreendimento')->relationship('ordemServico.projeto', 'nome')->searchable(),
+                SelectFilter::make('projeto')->label('Empreendimento')->options(fn () => \App\Models\Projeto::pluck('nome', 'id'))->query(fn ($query, $data) => $data['value'] ? $query->whereHas('ordemServico', fn ($q) => $q->where('projeto_id', $data['value'])) : $query),
             ])
             ->recordActions([
                 Action::make('aprovar')->label('Aprovar')->icon('heroicon-o-check')->color('success')->iconButton()
