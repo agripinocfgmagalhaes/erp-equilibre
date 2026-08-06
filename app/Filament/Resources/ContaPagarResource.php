@@ -55,8 +55,8 @@ class ContaPagarResource extends Resource
                 Hidden::make('contato_id'),
                 Select::make('plano_conta_id')->label('Plano de Conta')->options(PlanoConta::where('tipo', 'despesa')->where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->nullable(),
                 Select::make('conta_bancaria_id')->label('Conta Bancária')->options(ContaBancaria::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->nullable(),
-                Select::make('projeto_id')->label('Empreendimento')->options(Projeto::pluck('nome', 'id'))->searchable()->native(false)->nullable()->reactive()->afterStateUpdated(fn (callable $set) => $set('fase_obra_id', null)),
-                Select::make('fase_obra_id')->label('Fase da Obra')->options(fn (callable $get) => FaseObra::where('projeto_id', $get('projeto_id'))->pluck('nome', 'id'))->searchable()->native(false)->nullable()->disabled(fn (callable $get) => ! $get('projeto_id')),
+                Select::make('projeto_id')->label('Empreendimento')->options(Projeto::pluck('nome', 'id'))->searchable()->native(false)->nullable(),
+                Select::make('fase_padrao_id')->label('Fase')->options(fn () => \App\Models\FasePadrao::orderBy('ordem')->pluck('nome', 'id'))->searchable()->native(false)->nullable(),
                 Toggle::make('cancelado')->label('Cancelado')->default(false)
                     ->afterStateHydrated(fn ($component, $record) => $component->state($record?->status === 'cancelado'))
                     ->dehydrated(false)->live()->afterStateUpdated(fn (callable $set, $state) => $set('status', $state ? 'cancelado' : 'aberto')),
@@ -76,7 +76,7 @@ class ContaPagarResource extends Resource
         /** @var \Hydrat\TableLayoutToggle\Concerns\HasToggleableTable $livewire */
         $livewire = $table->getLivewire();
         return $table
-            ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->with(['projeto', 'planoConta', 'contaBancaria', 'faseObra']))
+            ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->with(['projeto', 'planoConta', 'contaBancaria', 'fasePadrao']))
             ->columns($livewire->isGridLayout() ? static::getGridTableColumns() : static::getListTableColumns())
             ->contentGrid(fn () => $livewire->isListLayout() ? null : ['md' => 2, 'lg' => 3])
             ->filters([SelectFilter::make('status')->options(['aberto' => 'Aberto', 'pago' => 'Pago', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado'])])
@@ -105,7 +105,7 @@ class ContaPagarResource extends Resource
             TextColumn::make('planoConta.nome')->sortable()->label('Plano de Conta')->searchable()->placeholder('—'),
             TextColumn::make('nome_contato')->sortable()->label('Contato')->placeholder('—'),
             TextColumn::make('descricao')->label('Descrição')->searchable()->sortable()->weight('medium'),
-            TextColumn::make('faseObra.nome')->sortable()->label('Fase')->searchable()->placeholder('—'),
+            TextColumn::make('fasePadrao.nome')->sortable()->label('Fase')->searchable()->placeholder('—'),
             TextColumn::make('valor')->label('Valor')->money('BRL')->alignEnd()->sortable(),
             TextColumn::make('contaBancaria.nome')->sortable()->label('Conta Bancária')->searchable()->placeholder('—'),
             TextColumn::make('status')->sortable()->label('Status')->badge()
