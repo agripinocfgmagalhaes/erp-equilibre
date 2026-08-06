@@ -9,6 +9,7 @@ class Projeto extends Model
     protected $casts = ['valor_orcamento' => 'decimal:2'];
     public function unidades(): HasMany { return $this->hasMany(Unidade::class); }
     public function fasesObra(): HasMany { return $this->hasMany(FaseObra::class); }
+    public function orcamentoItens(): HasMany { return $this->hasMany(OrcamentoItem::class); }
     public function ordensServico(): HasMany { return $this->hasMany(OrdenServico::class); }
 
     public function avancoFisico(): float

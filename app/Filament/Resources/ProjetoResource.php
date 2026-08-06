@@ -24,6 +24,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use App\Filament\Resources\ProjetoResource\RelationManagers\UnidadesRelationManager;
 use App\Filament\Resources\ProjetoResource\RelationManagers\FasesObraRelationManager;
+use App\Filament\Resources\ProjetoResource\RelationManagers\OrcamentoItensRelationManager;
 
 class ProjetoResource extends Resource
 {
@@ -78,7 +79,7 @@ class ProjetoResource extends Resource
 
     public static function getRelations(): array
     {
-        return [UnidadesRelationManager::class, FasesObraRelationManager::class];
+        return [UnidadesRelationManager::class, FasesObraRelationManager::class, OrcamentoItensRelationManager::class];
     }
 
     public static function getPages(): array
