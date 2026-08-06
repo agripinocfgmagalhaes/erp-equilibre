@@ -5,12 +5,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ContaPagar extends Model
 {
     protected $table = 'contas_pagar';
-    protected $fillable = ['descricao','numero_documento','contato_tipo','contato_id','plano_conta_id','conta_bancaria_id','projeto_id','fase_obra_id','pedido_compra_id','ordem_servico_id','valor','valor_pago','data_vencimento','data_pagamento','status','observacoes'];
+    protected $fillable = ['descricao','numero_documento','contato_tipo','contato_id','plano_conta_id','conta_bancaria_id','projeto_id','fase_obra_id','fase_padrao_id','pedido_compra_id','ordem_servico_id','valor','valor_pago','data_vencimento','data_pagamento','status','observacoes'];
     protected $casts = ['valor' => 'decimal:2', 'valor_pago' => 'decimal:2', 'data_vencimento' => 'date', 'data_pagamento' => 'date'];
     public function planoConta(): BelongsTo { return $this->belongsTo(PlanoConta::class); }
     public function contaBancaria(): BelongsTo { return $this->belongsTo(ContaBancaria::class); }
     public function projeto(): BelongsTo { return $this->belongsTo(Projeto::class); }
     public function faseObra(): BelongsTo { return $this->belongsTo(FaseObra::class); }
+    public function fasePadrao(): BelongsTo { return $this->belongsTo(FasePadrao::class, 'fase_padrao_id'); }
     public function pedidoCompra(): BelongsTo { return $this->belongsTo(PedidoCompra::class); }
     public function ordemServico(): BelongsTo { return $this->belongsTo(OrdenServico::class, 'ordem_servico_id'); }
     public function medicao() { return $this->hasOne(Medicao::class, 'conta_pagar_id'); }

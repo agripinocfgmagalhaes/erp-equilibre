@@ -42,11 +42,11 @@ class OrdenServicoResource extends Resource
                 TextInput::make('numero')->label('Número da OS')->required()->unique(ignoreRecord: true)->maxLength(20),
                 DatePicker::make('data')->label('Data')->required()->native(false)->displayFormat('d/m/Y'),
                 Select::make('projeto_id')->label('Empreendimento')->native(false)->searchable()->required()
-                    ->options(fn () => Projeto::pluck('nome', 'id'))->reactive()->afterStateUpdated(fn ($set) => $set('fase_obra_id', null)),
+                    ->options(fn () => Projeto::pluck('nome', 'id'))->reactive(),
                 Select::make('prestador_id')->label('Prestador/Empreiteiro')->native(false)->searchable()
                     ->options(Prestador::orderBy('nome')->pluck('nome', 'id')),
-                Select::make('fase_obra_id')->label('Fase da Obra')->native(false)->reactive()
-                    ->options(fn ($get) => FaseObra::where('projeto_id', $get('projeto_id'))->pluck('nome', 'id'))->disabled(fn ($get) => ! $get('projeto_id')),
+                Select::make('fase_padrao_id')->label('Fase')->native(false)->searchable()
+                    ->options(fn () => \App\Models\FasePadrao::orderBy('ordem')->pluck('nome', 'id')),
                 Select::make('status')->label('Status')->native(false)->default('planejado')->required()
                     ->options(['planejado' => 'Planejado', 'em_execucao' => 'Em Execução', 'concluido' => 'Concluído', 'suspenso' => 'Suspenso']),
                 Textarea::make('descricao')->label('Descrição')->rows(2)->columnSpanFull(),
@@ -55,7 +55,7 @@ class OrdenServicoResource extends Resource
                 Repeater::make('itens')->relationship('itens')->label('')
                     ->schema([
                         Select::make('orcamento_item_id')->label('Item do Orçamento (opcional)')->native(false)->searchable()
-                            ->options(fn ($get) => OrcamentoItem::where('fase_obra_id', $get('../../fase_obra_id'))->pluck('descricao', 'id'))
+                            ->options(fn ($get) => OrcamentoItem::where('fase_padrao_id', $get('../../../fase_padrao_id'))->pluck('descricao', 'id'))
                             ->afterStateUpdated(function ($state, callable $set) {
                                 if (! $state) return;
                                 $oi = OrcamentoItem::find($state);
