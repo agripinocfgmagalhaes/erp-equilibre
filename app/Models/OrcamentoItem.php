@@ -5,10 +5,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class OrcamentoItem extends Model
 {
     protected $table = 'orcamento_itens';
-    protected $fillable = ['projeto_id', 'fase_obra_id', 'servico_id', 'descricao', 'unidade', 'quantidade', 'valor_unitario', 'valor_total'];
+    protected $fillable = ['projeto_id', 'fase_padrao_id', 'servico_id', 'descricao', 'unidade', 'quantidade', 'valor_unitario', 'valor_total'];
     protected $casts = ['quantidade' => 'decimal:2', 'valor_unitario' => 'decimal:2', 'valor_total' => 'decimal:2'];
     public function projeto(): BelongsTo { return $this->belongsTo(Projeto::class); }
-    public function faseObra(): BelongsTo { return $this->belongsTo(FaseObra::class, 'fase_obra_id'); }
+    public function fasePadrao(): BelongsTo { return $this->belongsTo(FasePadrao::class, 'fase_padrao_id'); }
     public function servico(): BelongsTo { return $this->belongsTo(Servico::class); }
     protected static function booted(): void
     {
