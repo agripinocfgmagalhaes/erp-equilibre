@@ -1,39 +1,46 @@
 <?php
+
 namespace App\Filament\Resources;
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\TextInput;
+
+use App\Filament\Imports\ClienteImporter;
+use App\Filament\Resources\ClienteResource\Pages;
+use App\Filament\Resources\ClienteResource\Pages\ListClientes;
+use App\Models\Cliente;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ImportAction;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Columns\Layout\Stack;
-use Filament\Tables\Columns\Layout\Split;
-use Filament\Tables\Filters\TernaryFilter;
-use Filament\Actions\ImportAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use App\Filament\Resources\ClienteResource\Pages\ListClientes;
-use App\Filament\Resources\ClienteResource\Pages\CreateCliente;
-use App\Filament\Resources\ClienteResource\Pages\EditCliente;
-use App\Filament\Resources\ClienteResource\Pages;
-use App\Filament\Imports\ClienteImporter;
-use App\Models\Cliente;
-use Filament\Forms;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\Layout\Split;
+use Filament\Tables\Columns\Layout\Stack;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+
 class ClienteResource extends Resource
 {
     protected static ?string $model = Cliente::class;
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-users';
+
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-users';
+
     protected static ?string $navigationLabel = 'Clientes';
-    protected static string | \UnitEnum | null $navigationGroup = 'Vendas';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Vendas';
+
     protected static ?int $navigationSort = 1;
+
     protected static ?string $slug = 'clientes';
+
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
@@ -47,6 +54,7 @@ class ClienteResource extends Resource
                 TextInput::make('renda_familiar')->label('Renda Familiar')->numeric()->prefix('R$'),
                 Select::make('estado_civil')->label('Estado Civil')->options(Cliente::ESTADOS_CIVIS)->native(false)->live(),
             ])->columns(2)->columnSpanFull(),
+
             Section::make('Dados do Cônjuge')->schema([
                 TextInput::make('conjuge_nome')->label('Nome do Cônjuge')->maxLength(100),
                 TextInput::make('conjuge_cpf')->label('CPF do Cônjuge')->maxLength(14),
@@ -55,6 +63,7 @@ class ClienteResource extends Resource
                 TextInput::make('conjuge_telefone')->label('Telefone do Cônjuge')->maxLength(20),
                 TextInput::make('conjuge_renda')->label('Renda do Cônjuge')->numeric()->prefix('R$'),
             ])->columns(3)->columnSpanFull()->visible(fn (callable $get) => in_array($get('estado_civil'), ['casado', 'uniao_estavel'])),
+
             Section::make('Endereço')->schema([
                 TextInput::make('cep')->label('CEP')->maxLength(9),
                 TextInput::make('logradouro')->label('Logradouro')->maxLength(150)->columnSpan(2),
@@ -64,23 +73,41 @@ class ClienteResource extends Resource
                 TextInput::make('cidade')->label('Cidade')->maxLength(100),
                 TextInput::make('estado')->label('UF')->maxLength(2),
             ])->columns(4)->columnSpanFull(),
+
             Textarea::make('observacoes')->label('Observações')->rows(2)->columnSpanFull(),
             Toggle::make('ativo')->label('Ativo')->default(true),
         ]);
     }
+
     public static function table(Table $table): Table
     {
         /** @var \Hydrat\TableLayoutToggle\Concerns\HasToggleableTable $livewire */
         $livewire = $table->getLivewire();
+
         return $table
             ->columns($livewire->isGridLayout() ? static::getGridTableColumns() : static::getListTableColumns())
             ->contentGrid(fn () => $livewire->isListLayout() ? null : ['md' => 2, 'lg' => 3])
             ->filters([TernaryFilter::make('ativo')->trueLabel('Ativos')->falseLabel('Inativos')])
-            ->headerActions([ImportAction::make()->importer(ClienteImporter::class)->label('Importar Planilha')])
+            ->headerActions([
+                Action::make('downloadTemplate')
+                    ->label('Baixar Modelo CSV')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('info')
+                    ->url('/download/clientes-template')
+                    ->openUrlInNewTab(),
+
+                ImportAction::make()
+                    ->importer(ClienteImporter::class)
+                    ->label('Importar Planilha')
+                    ->icon('heroicon-o-arrow-up-tray'),
+            ])
             ->recordActions([EditAction::make()->slideOver(), DeleteAction::make()])
             ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
-            ->defaultSort('nome')->dragReorderableColumns()->stickableColumns();
+            ->defaultSort('nome')
+            ->dragReorderableColumns()
+            ->stickableColumns();
     }
+
     protected static function getListTableColumns(): array
     {
         return [
@@ -88,10 +115,15 @@ class ClienteResource extends Resource
             TextColumn::make('cpf')->sortable()->label('CPF')->searchable()->placeholder('—'),
             TextColumn::make('whatsapp')->sortable()->label('WhatsApp')->placeholder('—'),
             TextColumn::make('email')->sortable()->label('E-mail')->searchable()->placeholder('—'),
-            TextColumn::make('estado_civil')->sortable()->label('Estado Civil')->formatStateUsing(fn ($state) => Cliente::ESTADOS_CIVIS[$state] ?? '—')->placeholder('—'),
+            TextColumn::make('estado_civil')
+                ->sortable()
+                ->label('Estado Civil')
+                ->formatStateUsing(fn ($state) => Cliente::ESTADOS_CIVIS[$state] ?? '—')
+                ->placeholder('—'),
             IconColumn::make('ativo')->sortable()->label('Ativo')->boolean(),
         ];
     }
+
     protected static function getGridTableColumns(): array
     {
         return [
@@ -101,14 +133,34 @@ class ClienteResource extends Resource
                     IconColumn::make('ativo')->sortable()->label('Ativo')->boolean()->grow(false),
                 ]),
                 Split::make([
-                    TextColumn::make('cpf')->sortable()->label('CPF')->description('CPF', position: 'above')->searchable()->placeholder('—'),
-                    TextColumn::make('whatsapp')->sortable()->label('WhatsApp')->description('WhatsApp', position: 'above')->placeholder('—'),
+                    TextColumn::make('cpf')
+                        ->sortable()
+                        ->label('CPF')
+                        ->description('CPF', position: 'above')
+                        ->searchable()
+                        ->placeholder('—'),
+                    TextColumn::make('whatsapp')
+                        ->sortable()
+                        ->label('WhatsApp')
+                        ->description('WhatsApp', position: 'above')
+                        ->placeholder('—'),
                 ]),
-                TextColumn::make('email')->sortable()->label('E-mail')->description('E-mail', position: 'above')->searchable()->placeholder('—'),
-                TextColumn::make('estado_civil')->sortable()->label('Estado Civil')->description('Estado Civil', position: 'above')->formatStateUsing(fn ($state) => Cliente::ESTADOS_CIVIS[$state] ?? '—')->placeholder('—'),
+                TextColumn::make('email')
+                    ->sortable()
+                    ->label('E-mail')
+                    ->description('E-mail', position: 'above')
+                    ->searchable()
+                    ->placeholder('—'),
+                TextColumn::make('estado_civil')
+                    ->sortable()
+                    ->label('Estado Civil')
+                    ->description('Estado Civil', position: 'above')
+                    ->formatStateUsing(fn ($state) => Cliente::ESTADOS_CIVIS[$state] ?? '—')
+                    ->placeholder('—'),
             ])->space(3)->extraAttributes(['class' => 'pb-2']),
         ];
     }
+
     public static function getPages(): array
     {
         return ['index' => ListClientes::route('/')];
