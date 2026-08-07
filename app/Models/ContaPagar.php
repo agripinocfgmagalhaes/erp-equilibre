@@ -1,12 +1,19 @@
 <?php
+
 namespace App\Models;
+
+use App\Services\Financeiro\ContaPagarService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class ContaPagar extends Model
 {
     protected $table = 'contas_pagar';
+
     protected $fillable = ['descricao','numero_documento','contato_tipo','contato_id','plano_conta_id','conta_bancaria_id','projeto_id','fase_obra_id','fase_padrao_id','pedido_compra_id','ordem_servico_id','valor','valor_pago','data_vencimento','data_pagamento','status','observacoes'];
+
     protected $casts = ['valor' => 'decimal:2', 'valor_pago' => 'decimal:2', 'data_vencimento' => 'date', 'data_pagamento' => 'date'];
+
     public function planoConta(): BelongsTo { return $this->belongsTo(PlanoConta::class); }
     public function contaBancaria(): BelongsTo { return $this->belongsTo(ContaBancaria::class); }
     public function projeto(): BelongsTo { return $this->belongsTo(Projeto::class); }
@@ -15,9 +22,11 @@ class ContaPagar extends Model
     public function pedidoCompra(): BelongsTo { return $this->belongsTo(PedidoCompra::class); }
     public function ordemServico(): BelongsTo { return $this->belongsTo(OrdenServico::class, 'ordem_servico_id'); }
     public function medicao() { return $this->hasOne(Medicao::class, 'conta_pagar_id'); }
+
     public function getNomeContatoAttribute(): string
     {
         if (! $this->contato_tipo || ! $this->contato_id) return '—';
+
         $model = match ($this->contato_tipo) {
             'cliente' => Cliente::find($this->contato_id),
             'corretor' => Corretor::find($this->contato_id),
@@ -25,16 +34,15 @@ class ContaPagar extends Model
             'prestador' => Prestador::find($this->contato_id),
             default => null,
         };
+
         return $model ? ucfirst($this->contato_tipo).' - '.$model->nome : '—';
     }
+
     public function darBaixa(float $valorPago, ?string $dataPagamento = null, ?int $contaBancariaId = null): void
     {
-        $contaBancariaId = $contaBancariaId ?? $this->conta_bancaria_id;
-        $dataPagamento = $dataPagamento ?? now()->toDateString();
-        $this->update(['valor_pago' => $valorPago, 'data_pagamento' => $dataPagamento, 'conta_bancaria_id' => $contaBancariaId, 'status' => $valorPago >= $this->valor ? 'pago' : 'aberto']);
-        if ($contaBancariaId) LancamentoBancario::registrarBaixa('conta_pagar', $this->id, $contaBancariaId, 'saida', $this->descricao, $valorPago, $dataPagamento);
-        if ($valorPago >= $this->valor && $this->medicao) $this->medicao->update(['status' => 'paga']);
+        app(ContaPagarService::class)->darBaixa($this, $valorPago, $dataPagamento, $contaBancariaId);
     }
+
     protected static function booted(): void
     {
         static::saving(function (ContaPagar $conta) {
