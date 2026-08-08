@@ -40,7 +40,7 @@ class ProjetoResource extends Resource
     {
         return $schema->components([
             Section::make('Dados do Empreendimento')->schema([
-                TextInput::make('nome')->label('Nome')->required()->maxLength(150)->columnSpanFull(),
+                TextInput::make('nome')->label('Nome')->required()->maxLength(150)->columnSpan(3),
                 Select::make('status')->label('Status')->native(false)->default('planejamento')
                     ->options(['planejamento' => 'Planejamento', 'em_andamento' => 'Em Andamento', 'concluido' => 'Concluído', 'cancelado' => 'Cancelado']),
                 Select::make('cor')->label('Cor')->native(false)->default('gray')
@@ -55,7 +55,7 @@ class ProjetoResource extends Resource
                     ->formatStateUsing(fn ($state) => $state !== null ? number_format((float) $state, 2, ',', '.') : null)
                     ->helperText('Base para o % de avanço financeiro'),
                 Textarea::make('descricao')->label('Descrição')->rows(2)->columnSpanFull(),
-            ])->columns(2)->columnSpanFull(),
+            ])->columns(4)->columnSpanFull(),
         ]);
     }
 

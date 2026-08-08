@@ -26,3 +26,28 @@ Route::get('/download/clientes-template', function () {
         fclose($handle);
     }, 'clientes_template.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
 });
+
+
+
+
+
+
+
+// Download do template CSV de unidades (colunas reais da planilha do usuário)
+Route::get('/download/unidades-template', function () {
+    $linhas = [
+        ['identificacao','VALOR AVALIADO','Valor de Tabela','ANDAR','TIPOLOGIA','ÁREA PRIVATIVA','TIPO','VAGA DE GARAGEM','status'],
+        ['105 A','R$ 205.000','R$ 210.000','TÉRREO','2QTS 2WCS','52,40','TÉRREO /A','1 VAGA','disponivel'],
+        ['205 B','R$ 231.000','R$ 236.000','1º','2QTS 2WCS','52,40','1º /B','1 VAGA','disponivel'],
+        ['101','R$ 240.000','R$ 245.000','TÉRREO','2QTS 2WCS','52.62','TÉRREO /A','1 VAGA','reservado'],
+    ];
+
+    return response()->streamDownload(function () use ($linhas) {
+        $handle = fopen('php://output', 'w');
+        fwrite($handle, "\xEF\xBB\xBF");
+        foreach ($linhas as $linha) {
+            fwrite($handle, implode(';', $linha)."\n");
+        }
+        fclose($handle);
+    }, 'unidades_template.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+});

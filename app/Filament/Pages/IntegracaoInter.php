@@ -19,7 +19,7 @@ class IntegracaoInter extends Page implements HasForms
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-key';
     protected static ?string $navigationLabel = 'Integracao Inter';
-    protected static string|\UnitEnum|null $navigationGroup = 'Configuracoes';
+    protected static string|\UnitEnum|null $navigationGroup = 'Configurações';
     protected static ?string $slug = 'integracao-inter';
     protected static bool $shouldRegisterNavigation = false;
     protected string $view = 'filament.pages.integracao-inter';
