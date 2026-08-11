@@ -28,7 +28,7 @@ class InterBoletoService
         return Http::withOptions([
             'cert' => $this->config->certFullPath(),
             'ssl_key' => $this->config->keyFullPath(),
-        ])->withHeaders(array_filter([
+        ])->timeout(60)->connectTimeout(10)->withHeaders(array_filter([
             'x-conta-corrente' => $this->config->conta_corrente,
         ]));
     }

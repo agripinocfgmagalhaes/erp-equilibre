@@ -41,7 +41,7 @@ class PedidoCompraResource extends Resource
     {
         return $schema->components([
             Section::make('Dados do Pedido')->schema([
-                TextInput::make('numero')->label('Número')->default(fn () => PedidoCompra::gerarNumero())->required()->maxLength(20)->disabledOn('edit'),
+                TextInput::make('numero')->label('Número')->disabled()->dehydrated(false)->maxLength(20),
                 Select::make('fornecedor_id')->label('Fornecedor')->options(Fornecedor::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->required(),
                 Select::make('status')->label('Status')->native(false)->default('rascunho')
                     ->options(['rascunho' => 'Rascunho', 'aprovado' => 'Aprovado', 'recebido_parcial' => 'Recebido Parcial', 'recebido' => 'Recebido', 'cancelado' => 'Cancelado']),

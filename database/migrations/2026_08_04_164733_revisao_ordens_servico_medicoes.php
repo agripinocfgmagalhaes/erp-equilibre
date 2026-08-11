@@ -11,12 +11,16 @@ return new class extends Migration {
             }
         });
         DB::table('medicoes')->where('status', 'rascunho')->update(['status' => 'medida']);
-        DB::statement("ALTER TABLE medicoes MODIFY status ENUM('medida','aprovada','faturada','paga') NOT NULL DEFAULT 'medida'");
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE medicoes MODIFY status ENUM('medida','aprovada','faturada','paga') NOT NULL DEFAULT 'medida'");
+        }
     }
     public function down(): void {
         Schema::table('contas_pagar', function (Blueprint $table) {
             if (Schema::hasColumn('contas_pagar', 'ordem_servico_id')) { $table->dropConstrainedForeignId('ordem_servico_id'); }
         });
-        DB::statement("ALTER TABLE medicoes MODIFY status ENUM('rascunho','medida','aprovada','faturada','paga') NOT NULL DEFAULT 'rascunho'");
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE medicoes MODIFY status ENUM('rascunho','medida','aprovada','faturada','paga') NOT NULL DEFAULT 'rascunho'");
+        }
     }
 };

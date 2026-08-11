@@ -88,7 +88,7 @@ class UnidadeImporter extends Importer
             $st = $get('status');
             if ($st) {
                 $s = self::normalizeStatus($st);
-                if (! in_array($s, ['disponivel', 'reservado', 'vendido', 'distratado', 'indisponivel'], true)) {
+                if (! in_array($s, ['disponivel', 'reservado', 'vendido', 'indisponivel'], true)) {
                     throw new \InvalidArgumentException("Status inválido: {$st}");
                 }
                 $record->status = $s;

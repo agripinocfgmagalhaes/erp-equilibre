@@ -42,10 +42,6 @@ class ListUnidades extends ListRecords
                 ->badge(Unidade::where('status', 'indisponivel')->count())
                 ->badgeColor('secondary')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'indisponivel')),
-            'distratado' => Tab::make('Distratado')
-                ->badge(Unidade::where('status', 'distratado')->count())
-                ->badgeColor('danger')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'distratado')),
         ];
     }
 }

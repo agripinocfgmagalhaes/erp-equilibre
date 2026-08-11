@@ -5,12 +5,14 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\UnidadeResource\Pages\ListUnidades;
 use App\Models\Projeto;
 use App\Models\Unidade;
+use Filament\Notifications\Notification;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -40,7 +42,7 @@ class UnidadeResource extends Resource
             TextInput::make('valor_tabela')->label('Valor de Tabela')->numeric()->prefix('R$')->step(0.01),
             TextInput::make('valor_avaliado')->label('Valor Avaliado')->numeric()->prefix('R$')->step(0.01),
             Select::make('status')->label('Status')->native(false)->default('disponivel')
-                ->options(['disponivel' => 'Disponível', 'reservado' => 'Reservado', 'vendido' => 'Vendido', 'distratado' => 'Distratado', 'indisponivel' => 'Indisponível']),
+                ->options(['disponivel' => 'Disponível', 'reservado' => 'Reservado', 'vendido' => 'Vendido', 'indisponivel' => 'Indisponível']),
         ])->columns(2);
     }
 
@@ -59,18 +61,41 @@ class UnidadeResource extends Resource
                 TextColumn::make('valor_avaliado')->label('Valor Avaliado')->money('BRL')->alignEnd()->sortable()->placeholder('—'),
                 TextColumn::make('vaga_garagem')->label('Vaga')->sortable()->placeholder('—'),
                 TextColumn::make('status')->label('Status')->badge()->sortable()
-                    ->colors(['success' => 'disponivel', 'warning' => 'reservado', 'gray' => 'vendido', 'danger' => 'distratado', 'secondary' => 'indisponivel'])
-                    ->formatStateUsing(fn ($state) => ['disponivel' => 'Disponível', 'reservado' => 'Reservado', 'vendido' => 'Vendido', 'distratado' => 'Distratado', 'indisponivel' => 'Indisponível'][$state] ?? $state),
+                    ->colors(['success' => 'disponivel', 'warning' => 'reservado', 'gray' => 'vendido', 'secondary' => 'indisponivel'])
+                    ->formatStateUsing(fn ($state) => ['disponivel' => 'Disponível', 'reservado' => 'Reservado', 'vendido' => 'Vendido', 'indisponivel' => 'Indisponível'][$state] ?? $state),
             ])
             ->filters([
-                SelectFilter::make('status')->options(['disponivel' => 'Disponível', 'reservado' => 'Reservado', 'vendido' => 'Vendido', 'distratado' => 'Distratado', 'indisponivel' => 'Indisponível']),
+                SelectFilter::make('status')->options(['disponivel' => 'Disponível', 'reservado' => 'Reservado', 'vendido' => 'Vendido', 'indisponivel' => 'Indisponível']),
                 SelectFilter::make('projeto_id')->label('Projeto')->options(Projeto::pluck('nome', 'id'))->searchable(),
             ])
             ->recordActions([
                 EditAction::make()->slideOver()->modalWidth('4xl')->iconButton(),
                 DeleteAction::make()->iconButton(),
             ])
-            ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
+            ->toolbarActions([
+                BulkAction::make('editarLote')
+                    ->label('Editar em lote')
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('warning')
+                    ->schema([
+                        Select::make('status')->label('Status')->native(false)
+                            ->options(['disponivel' => 'Disponível', 'reservado' => 'Reservado', 'vendido' => 'Vendido', 'indisponivel' => 'Indisponível']),
+                        TextInput::make('andar')->label('Andar')->maxLength(100),
+                        TextInput::make('tipologia')->label('Tipologia')->maxLength(100),
+                        TextInput::make('vaga_garagem')->label('Vaga de Garagem')->maxLength(50),
+                        TextInput::make('valor_tabela')->label('Valor de Tabela')->numeric()->prefix('R$')->step(0.01),
+                        TextInput::make('valor_avaliado')->label('Valor Avaliado')->numeric()->prefix('R$')->step(0.01),
+                    ])
+                    ->action(function (array $data, $records) {
+                        $update = array_filter($data, fn ($v) => $v !== null && $v !== '');
+                        foreach ($records as $record) {
+                            $record->update($update);
+                        }
+                        Notification::make()->title('Unidades atualizadas: '.count($records))->success()->send();
+                    })
+                    ->deselectRecordsAfterCompletion(),
+                BulkActionGroup::make([DeleteBulkAction::make()])
+            ])
             ->defaultSort('identificacao')->dragReorderableColumns()->stickableColumns();
     }
 

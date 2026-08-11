@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\DB;
 return new class extends Migration {
     public function up(): void
     {
-        DB::statement("ALTER TABLE lancamentos_bancarios MODIFY origem ENUM('manual','conta_pagar','conta_receber','transferencia') NOT NULL DEFAULT 'manual'");
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE lancamentos_bancarios MODIFY origem ENUM('manual','conta_pagar','conta_receber','transferencia') NOT NULL DEFAULT 'manual'");
+        }
         Schema::table('lancamentos_bancarios', function (Blueprint $table) {
             $table->string('transferencia_grupo', 36)->nullable()->after('origem_id');
         });
@@ -18,6 +20,8 @@ return new class extends Migration {
         Schema::table('lancamentos_bancarios', function (Blueprint $table) {
             $table->dropColumn('transferencia_grupo');
         });
-        DB::statement("ALTER TABLE lancamentos_bancarios MODIFY origem ENUM('manual','conta_pagar','conta_receber') NOT NULL DEFAULT 'manual'");
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE lancamentos_bancarios MODIFY origem ENUM('manual','conta_pagar','conta_receber') NOT NULL DEFAULT 'manual'");
+        }
     }
 };

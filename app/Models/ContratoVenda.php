@@ -16,14 +16,21 @@ class ContratoVenda extends Model
     public static function gerarNumero(): string
     {
         $ano = now()->year;
-        $ultimo = static::where('numero', 'like', "CV-{$ano}-%")->count();
-        return sprintf('CV-%d-%04d', $ano, $ultimo + 1);
+        return sprintf('CV-%d-%04d', $ano, Sequencia::proximo('CV', $ano));
     }
     protected static function booted(): void
     {
-        static::creating(function (ContratoVenda $c) { $c->percentual_comissao = 4.5; $c->valor_comissao = round((float) $c->valor_venda * 4.5 / 100, 2); });
+        static::creating(function (ContratoVenda $c) {
+            if (empty($c->numero)) { $c->numero = static::gerarNumero(); }
+            $c->percentual_comissao = 4.5; $c->valor_comissao = round((float) $c->valor_venda * 4.5 / 100, 2);
+        });
         static::updating(function (ContratoVenda $c) { if ($c->isDirty('valor_venda')) { $c->percentual_comissao = 4.5; $c->valor_comissao = round((float) $c->valor_venda * 4.5 / 100, 2); } });
         static::created(function (ContratoVenda $c) { $c->unidade->update(['status' => 'vendido']); });
-        static::updated(function (ContratoVenda $c) { if (in_array($c->status, ['distratado','cancelado'])) $c->unidade->update(['status' => 'distratado']); });
+        static::updated(function (ContratoVenda $c) { if (in_array($c->status, ['distratado','cancelado'])) $c->unidade->update(['status' => 'disponivel']); });
+    }
+
+    public function baloes(): HasMany
+    {
+        return $this->hasMany(Balao::class)->orderBy('ordem');
     }
 }

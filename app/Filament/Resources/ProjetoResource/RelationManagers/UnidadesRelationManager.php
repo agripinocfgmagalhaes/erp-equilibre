@@ -3,6 +3,8 @@ namespace App\Filament\Resources\ProjetoResource\RelationManagers;
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
+use Filament\Tables\Columns\SelectColumn;
+use Filament\Tables\Columns\TextInputColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Actions\CreateAction;
@@ -39,7 +41,7 @@ class UnidadesRelationManager extends RelationManager
                 ->dehydrateStateUsing(fn ($state) => $state !== null ? (float) str_replace(['.', ','], ['', '.'], $state) : null)
                 ->formatStateUsing(fn ($state) => $state !== null ? number_format((float) $state, 2, ',', '.') : null),
             Select::make('status')->label('Status')->native(false)->default('disponivel')
-                ->options(['disponivel' => 'Disponível', 'reservado' => 'Reservado', 'vendido' => 'Vendido', 'distratado' => 'Distratado', 'indisponivel' => 'Indisponível']),
+                ->options(['disponivel' => 'Disponível', 'reservado' => 'Reservado', 'vendido' => 'Vendido', 'indisponivel' => 'Indisponível']),
         ])->columns(2);
     }
 
@@ -48,20 +50,18 @@ class UnidadesRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('identificacao')
             ->columns([
-                TextColumn::make('identificacao')->label('Identificação')->searchable()->sortable()->weight('medium'),
-                TextColumn::make('tipo')->label('Tipo')->searchable()->sortable()->placeholder('—'),
-                TextColumn::make('andar')->label('Andar')->sortable()->placeholder('—'),
-                TextColumn::make('tipologia')->label('Tipologia')->searchable()->sortable()->placeholder('—'),
-                TextColumn::make('vaga_garagem')->label('Vaga')->sortable()->placeholder('—'),
+                TextInputColumn::make('identificacao')->label('Identificação'),
+                TextInputColumn::make('tipo')->label('Tipo'),
+                TextInputColumn::make('andar')->label('Andar'),
+                TextInputColumn::make('tipologia')->label('Tipologia'),
+                TextInputColumn::make('vaga_garagem')->label('Vaga'),
                 TextColumn::make('area')->label('Área Privativa (m²)')->numeric(decimalPlaces: 2)->sortable()->placeholder('—'),
                 TextColumn::make('valor_tabela')->label('Valor de Tabela')->money('BRL')->alignEnd()->sortable(),
                 TextColumn::make('valor_avaliado')->label('Valor Avaliado')->money('BRL')->alignEnd()->sortable()->placeholder('—'),
-                TextColumn::make('status')->label('Status')->badge()->sortable()
-                    ->colors(['success' => 'disponivel', 'warning' => 'reservado', 'gray' => 'vendido', 'danger' => 'distratado', 'secondary' => 'indisponivel'])
-                    ->formatStateUsing(fn ($state) => ['disponivel' => 'Disponível', 'reservado' => 'Reservado', 'vendido' => 'Vendido', 'distratado' => 'Distratado', 'indisponivel' => 'Indisponível'][$state] ?? $state),
+                SelectColumn::make('status')->label('Status')->options(['disponivel' => 'Disponível', 'reservado' => 'Reservado', 'vendido' => 'Vendido', 'indisponivel' => 'Indisponível']),
             ])
             ->filters([
-                SelectFilter::make('status')->options(['disponivel' => 'Disponível', 'reservado' => 'Reservado', 'vendido' => 'Vendido', 'distratado' => 'Distratado', 'indisponivel' => 'Indisponível']),
+                SelectFilter::make('status')->options(['disponivel' => 'Disponível', 'reservado' => 'Reservado', 'vendido' => 'Vendido', 'indisponivel' => 'Indisponível']),
             ])
             ->headerActions([
                 CreateAction::make()->label('+ Unidade')->slideOver(),

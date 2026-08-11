@@ -30,8 +30,16 @@ class RequisicaoCompra extends Model
     public static function gerarNumero(): string
     {
         $ano = now()->year;
-        $ultimo = static::where('numero', 'like', "RC-{$ano}-%")->count();
-        return sprintf('RC-%d-%04d', $ano, $ultimo + 1);
+        return sprintf('RC-%d-%04d', $ano, Sequencia::proximo('RC', $ano));
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (RequisicaoCompra $requisicao) {
+            if (empty($requisicao->numero)) {
+                $requisicao->numero = static::gerarNumero();
+            }
+        });
     }
 
     public function enviarParaAprovacao(): void

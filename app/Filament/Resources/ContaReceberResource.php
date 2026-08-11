@@ -85,8 +85,12 @@ class ContaReceberResource extends Resource
             Action::make('emitirBoleto')->label('Emitir Boleto Inter')->icon('heroicon-o-document-currency-dollar')->color('info')->iconButton()
                 ->visible(fn (ContaReceber $record) => !$record->inter_codigo_solicitacao && $record->status !== 'recebido')
                 ->action(function (ContaReceber $record) {
-                    app(\App\Services\InterBoletoService::class)->emitir($record);
-                    Notification::make()->title('Boleto emitido')->success()->send();
+                    try {
+                        app(\App\Services\InterBoletoService::class)->emitir($record);
+                        Notification::make()->title('Boleto emitido')->success()->send();
+                    } catch (\Throwable $e) {
+                        Notification::make()->title('Falha ao emitir boleto')->body($e->getMessage())->danger()->send();
+                    }
                 }),
             Action::make('verBoleto')->label('Ver Boleto')->icon('heroicon-o-eye')->color('gray')->iconButton()
                 ->visible(fn (ContaReceber $record) => (bool) $record->inter_codigo_solicitacao)

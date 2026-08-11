@@ -1,5 +1,7 @@
 <?php
 namespace App\Providers;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use App\Models\ContaPagar;
 use App\Models\ContaReceber;
@@ -12,5 +14,8 @@ class AppServiceProvider extends ServiceProvider
     {
         ContaPagar::observe(ContaPagarObserver::class);
         ContaReceber::observe(ContaReceberObserver::class);
+
+        RateLimiter::for('portal', fn () => Limit::perMinute(10));
+        RateLimiter::for('template', fn () => Limit::perMinute(30));
     }
 }

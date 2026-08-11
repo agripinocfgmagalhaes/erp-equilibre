@@ -15,7 +15,7 @@ class ClientePortalController extends Controller
 
         if (strlen($cpf) >= 11) {
             $contas = ContaReceber::whereHas('cliente', function ($q) use ($cpf) {
-                $q->whereRaw("REGEXP_REPLACE(cpf, '[^0-9]', '') = ?", [$cpf]);
+                $q->whereRaw("REPLACE(REPLACE(REPLACE(REPLACE(cpf,'.',''),'-',''),'/',''),' ','') = ?", [$cpf]);
             })
                 ->whereIn('status', ['aberto', 'vencido'])
                 ->whereNotNull('inter_codigo_solicitacao')

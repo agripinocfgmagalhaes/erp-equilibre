@@ -6,6 +6,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\Layout\Stack;
@@ -23,6 +24,7 @@ use App\Filament\Resources\ContratoVendaResource\Pages\EditContratoVenda;
 use App\Filament\Resources\ContratoVendaResource\Pages;
 use App\Models\ContratoVenda;
 use App\Models\ContaReceber;
+use App\Models\Balao;
 use App\Models\Unidade;
 use App\Models\Cliente;
 use App\Models\Corretor;
@@ -48,7 +50,8 @@ class ContratoVendaResource extends Resource
     }
     protected static function recalcParcelamento(callable $set, callable $get): void
     {
-        $parc = round((float)$get('valor_venda') - (float)$get('valor_sinal') - (float)$get('valor_fgts') - (float)$get('valor_subsidio') - (float)$get('valor_financiamento'), 2);
+        $baloes = array_sum(array_map(fn ($b) => (float) ($b['valor'] ?? 0), is_array($get('baloes')) ? $get('baloes') : []));
+        $parc = round((float)$get('valor_venda') - (float)$get('valor_sinal') - (float)$get('valor_fgts') - (float)$get('valor_subsidio') - (float)$get('valor_financiamento') - $baloes, 2);
         $set('valor_parcelamento', max(0, $parc));
         $set('valor_parcela', static::calcularPMT(max(0, $parc), (float)$get('taxa_juros') ?: 1.2, (int)$get('qtd_parcelas')));
     }
@@ -56,7 +59,7 @@ class ContratoVendaResource extends Resource
     {
         return $schema->components([
             Section::make('Dados do Contrato')->schema([
-                TextInput::make('numero')->label('Número')->default(fn () => ContratoVenda::gerarNumero())->required()->maxLength(20)->disabledOn('edit'),
+                TextInput::make('numero')->label('Número')->disabled()->dehydrated(false)->maxLength(20),
                 Select::make('status')->label('Status')->native(false)->default('ativo')->options(['ativo' => 'Ativo', 'distratado' => 'Distratado', 'cancelado' => 'Cancelado']),
                 DatePicker::make('data_contrato')->label('Data do Contrato')->native(false)->displayFormat('d/m/Y')->default(now())->required(),
                 DatePicker::make('data_entrega_prevista')->label('Previsão de Entrega')->native(false)->displayFormat('d/m/Y'),
@@ -84,6 +87,15 @@ class ContratoVendaResource extends Resource
                 TextInput::make('valor_financiamento')->label('Financiamento Bancário')->numeric()->prefix('R$')->step(0.01)->default(0)->live(onBlur: true)->afterStateUpdated(fn (callable $set, callable $get) => static::recalcParcelamento($set, $get)),
             ])->columns(3)->columnSpanFull(),
             Section::make('Parcelamento Direto')->schema([
+                Repeater::make('baloes')->label('Balões (Reforços)')
+                    ->relationship('baloes')
+                    ->schema([
+                        TextInput::make('ordem')->label('Nº')->numeric()->default(1)->columnSpan(1)->required(),
+                        TextInput::make('descricao')->label('Descrição')->maxLength(100)->default('Balão')->columnSpan(1)->required(),
+                        TextInput::make('valor')->label('Valor')->numeric()->prefix('R$')->step(0.01)->columnSpan(1)->required(),
+                        DatePicker::make('data_vencimento')->label('Vencimento')->native(false)->displayFormat('d/m/Y')->columnSpan(1)->required(),
+                    ])->columns(4)->collapsible()->defaultItems(0)->orderColumn('ordem')->live()->afterStateUpdated(fn (callable $set, callable $get) => static::recalcParcelamento($set, $get))->columnSpanFull(),
+
                 TextInput::make('valor_parcelamento')->label('Valor Total do Parcelamento')->numeric()->prefix('R$')->step(0.01)->default(0)->readOnly(),
                 TextInput::make('qtd_parcelas')->label('Nº de Parcelas')->numeric()->default(0)->minValue(0)->live(onBlur: true)->afterStateUpdated(fn (callable $set, callable $get) => static::recalcParcelamento($set, $get)),
                 TextInput::make('taxa_juros')->label('Taxa de Juros (% a.m.)')->numeric()->suffix('% a.m.')->step(0.001)->default(1.200)->live(onBlur: true)->afterStateUpdated(fn (callable $set, callable $get) => static::recalcParcelamento($set, $get)),
@@ -114,6 +126,13 @@ class ContratoVendaResource extends Resource
                         TextInput::make('parcelas_quantidade')->label('Nº de Parcelas')->numeric()->default(1)->minValue(1)->maxValue(360),
                         DatePicker::make('parcelas_primeiro_venc')->label('1º Vencimento')->native(false)->displayFormat('d/m/Y')->default(now()->addMonth()),
                     ])->columns(3),
+                    Section::make('Balões (Reforços)')->schema([
+                        \Filament\Forms\Components\Placeholder::make('baloes_info')->label('Serão gerados')->content(function ($record) {
+                            $baloes = $record?->baloes()->orderBy('ordem')->get() ?? collect();
+                            if ($baloes->isEmpty()) return 'Sem balões cadastrados neste contrato.';
+                            return $baloes->map(fn ($b) => $b->descricao.' '.$b->ordem.' — R$ '.number_format($b->valor, 2, ',', '.').' em '.$b->data_vencimento->format('d/m/Y'))->implode('  |  ');
+                        }),
+                    ])->columns(1),
                     Section::make('Repasse Bancário (FGTS + Subsídio + Financiamento)')->schema([
                         TextInput::make('repasse_valor')->label('Valor do Repasse')->numeric()->prefix('R$')->step(0.01)->default(0),
                         DatePicker::make('repasse_vencimento')->label('Previsão do Repasse')->native(false)->displayFormat('d/m/Y')->default(now()->addMonths(6)),
@@ -130,6 +149,9 @@ class ContratoVendaResource extends Resource
                         $valorParcela = static::calcularPMT($valorTotal, $taxa, $qtd);
                         $dataVenc = Carbon::parse($data['parcelas_primeiro_venc']);
                         for ($i = 1; $i <= $qtd; $i++) ContaReceber::create(['descricao' => 'Parcela '.$i.'/'.$qtd.' - '.$record->numero, 'contrato_venda_id' => $record->id, 'cliente_id' => $record->cliente_id, 'projeto_id' => $projeto, 'plano_conta_id' => $planoConta, 'valor' => $valorParcela, 'data_vencimento' => $dataVenc->copy()->addMonths($i - 1), 'status' => 'aberto']);
+                    }
+                    foreach ($record->baloes()->orderBy('ordem')->get() as $balao) {
+                        ContaReceber::create(['descricao' => $balao->descricao.' '.$balao->ordem.' - '.$record->numero, 'contrato_venda_id' => $record->id, 'cliente_id' => $record->cliente_id, 'projeto_id' => $projeto, 'plano_conta_id' => $planoConta, 'valor' => $balao->valor, 'data_vencimento' => $balao->data_vencimento, 'status' => 'aberto']);
                     }
                     if ((float)$data['repasse_valor'] > 0) ContaReceber::create(['descricao' => 'Repasse Bancário - '.$record->numero, 'contrato_venda_id' => $record->id, 'cliente_id' => $record->cliente_id, 'projeto_id' => $projeto, 'plano_conta_id' => $planoConta, 'valor' => $data['repasse_valor'], 'data_vencimento' => $data['repasse_vencimento'], 'status' => 'aberto']);
                 })->successNotificationTitle('Recebimentos gerados com sucesso'),

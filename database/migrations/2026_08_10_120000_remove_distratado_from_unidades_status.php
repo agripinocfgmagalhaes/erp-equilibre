@@ -9,8 +9,8 @@ return new class extends Migration {
             return;
         }
         $type = DB::select("SHOW COLUMNS FROM unidades LIKE 'status'")[0]->Type ?? '';
-        if (str_starts_with($type, 'enum') && ! str_contains($type, 'indisponivel')) {
-            DB::statement("ALTER TABLE unidades MODIFY status ENUM('disponivel','reservado','vendido','distratado','indisponivel') NOT NULL DEFAULT 'disponivel'");
+        if (str_contains($type, 'distratado')) {
+            DB::statement("ALTER TABLE unidades MODIFY status ENUM('disponivel','reservado','vendido','indisponivel') NOT NULL DEFAULT 'disponivel'");
         }
     }
 

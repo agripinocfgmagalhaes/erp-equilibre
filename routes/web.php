@@ -5,9 +5,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
-Route::get('/boletos/{contaReceber}/pdf', [\App\Http\Controllers\BoletoController::class, 'pdf'])->name('boleto.pdf')->middleware('auth');
-Route::get('/boletos/publico/{codigoSolicitacao}/pdf', [\App\Http\Controllers\BoletoController::class, 'pdfPublico'])->name('boleto.pdf.publico');
-Route::post('/webhooks/inter/cobranca', [\App\Http\Controllers\InterWebhookController::class, 'receber'])->name('webhook.inter.cobranca');Route::get('/meus-boletos', [\App\Http\Controllers\ClientePortalController::class, 'boletos'])->name('portal.boletos');
+Route::get('/boletos/{contaReceber}/pdf', [\App\Http\Controllers\BoletoController::class, 'pdf'])->name('boleto.pdf')->middleware(['auth', 'throttle:portal']);
+Route::get('/boletos/publico/{codigoSolicitacao}/pdf', [\App\Http\Controllers\BoletoController::class, 'pdfPublico'])->name('boleto.pdf.publico')->middleware('throttle:portal');
+Route::post('/webhooks/inter/cobranca', [\App\Http\Controllers\InterWebhookController::class, 'receber'])->name('webhook.inter.cobranca');
+Route::get('/meus-boletos', [\App\Http\Controllers\ClientePortalController::class, 'boletos'])->name('portal.boletos')->middleware('throttle:portal');
 
 // Download do template CSV de clientes (via PHP, evita 403 de arquivo estático)
 Route::get('/download/clientes-template', function () {
@@ -25,13 +26,7 @@ Route::get('/download/clientes-template', function () {
         }
         fclose($handle);
     }, 'clientes_template.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
-});
-
-
-
-
-
-
+})->middleware('throttle:template');
 
 // Download do template CSV de unidades (colunas reais da planilha do usuário)
 Route::get('/download/unidades-template', function () {
@@ -50,4 +45,4 @@ Route::get('/download/unidades-template', function () {
         }
         fclose($handle);
     }, 'unidades_template.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
-});
+})->middleware('throttle:template');

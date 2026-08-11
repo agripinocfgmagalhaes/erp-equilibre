@@ -69,7 +69,7 @@ class RequisicaoCompraResource extends Resource
     {
         return $schema->components([
             Section::make('Dados da Requisição')->schema([
-                TextInput::make('numero')->label('Número')->default(fn () => RequisicaoCompra::gerarNumero())->required()->maxLength(20)->disabledOn('edit'),
+                TextInput::make('numero')->label('Número')->disabled()->dehydrated(false)->maxLength(20),
                 Hidden::make('solicitante_id')->default(fn () => Auth::id()),
                 Select::make('projeto_id')->label('Empreendimento')->options(Projeto::pluck('nome', 'id'))->searchable()->native(false)->nullable()->reactive()->afterStateUpdated(fn (callable $set) => $set('fase_obra_id', null)),
                 Select::make('fase_obra_id')->label('Fase da Obra')->options(fn (callable $get) => FaseObra::where('projeto_id', $get('projeto_id'))->pluck('nome', 'id'))->searchable()->native(false)->nullable()->disabled(fn (callable $get) => ! $get('projeto_id')),

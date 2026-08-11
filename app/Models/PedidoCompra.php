@@ -18,7 +18,14 @@ class PedidoCompra extends Model
     public static function gerarNumero(): string
     {
         $ano = now()->year;
-        $ultimo = static::where('numero', 'like', "PC-{$ano}-%")->count();
-        return sprintf('PC-%d-%04d', $ano, $ultimo + 1);
+        return sprintf('PC-%d-%04d', $ano, Sequencia::proximo('PC', $ano));
+    }
+    protected static function booted(): void
+    {
+        static::creating(function (PedidoCompra $pedido) {
+            if (empty($pedido->numero)) {
+                $pedido->numero = static::gerarNumero();
+            }
+        });
     }
 }
