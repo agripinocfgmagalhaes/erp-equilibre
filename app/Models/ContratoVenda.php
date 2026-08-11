@@ -3,6 +3,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Log;
+use App\Services\InterBoletoService;
 class ContratoVenda extends Model
 {
     protected $table = 'contratos_venda';
@@ -26,11 +28,30 @@ class ContratoVenda extends Model
         });
         static::updating(function (ContratoVenda $c) { if ($c->isDirty('valor_venda')) { $c->percentual_comissao = 4.5; $c->valor_comissao = round((float) $c->valor_venda * 4.5 / 100, 2); } });
         static::created(function (ContratoVenda $c) { $c->unidade->update(['status' => 'vendido']); });
-        static::updated(function (ContratoVenda $c) { if (in_array($c->status, ['distratado','cancelado'])) $c->unidade->update(['status' => 'disponivel']); });
+        static::updated(function (ContratoVenda $c) { if (in_array($c->status, ['distratado','cancelado'])) { $c->unidade->update(['status' => 'disponivel']); $c->cancelarTitulosAbertos(); } });
     }
 
     public function baloes(): HasMany
     {
         return $this->hasMany(Balao::class)->orderBy('ordem');
+    }
+
+    public function cancelarTitulosAbertos(): int
+    {
+        $cancelados = 0;
+
+        foreach ($this->contasReceber()->whereIn('status', ['aberto', 'vencido'])->get() as $conta) {
+            if ($conta->inter_codigo_solicitacao) {
+                try {
+                    app(InterBoletoService::class)->cancelar($conta);
+                } catch (\Throwable $e) {
+                    Log::warning("Falha ao cancelar boleto no Inter (CR {$conta->id}): {$e->getMessage()}");
+                }
+            }
+            $conta->update(['status' => 'cancelado']);
+            $cancelados++;
+        }
+
+        return $cancelados;
     }
 }

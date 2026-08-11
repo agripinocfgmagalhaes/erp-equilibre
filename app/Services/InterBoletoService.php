@@ -130,10 +130,11 @@ class InterBoletoService
 
     public function cancelar(ContaReceber $conta, string $motivo = 'ACERTOS'): void
     {
-        $this->http()->withToken($this->token())
+        $res = $this->http()->withToken($this->token())
             ->post("{$this->baseUrl}/cobranca/v3/cobrancas/{$conta->inter_codigo_solicitacao}/cancelar", [
                 'motivoCancelamento' => $motivo,
             ]);
+        if ($res->failed()) throw new Exception('Falha ao cancelar boleto no Inter: ' . $res->body());
         $conta->update(['inter_situacao' => 'CANCELADO']);
     }
 

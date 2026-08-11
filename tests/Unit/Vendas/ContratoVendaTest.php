@@ -3,6 +3,7 @@
 namespace Tests\Unit\Vendas;
 
 use App\Models\Cliente;
+use App\Models\ContaReceber;
 use App\Models\ContratoVenda;
 use App\Models\Projeto;
 use App\Models\Unidade;
@@ -62,6 +63,45 @@ class ContratoVendaTest extends TestCase
 
         $contrato->update(['status' => 'distratado']);
 
+        $this->assertSame('disponivel', $unidade->fresh()->status);
+    }
+
+    public function test_distratado_cancela_titulos_abertos_e_mantem_recebidos(): void
+    {
+        $unidade = $this->criarUnidade();
+        $contrato = $this->criarContrato(['unidade_id' => $unidade->id]);
+
+        $aberta = ContaReceber::create([
+            'contrato_venda_id' => $contrato->id,
+            'cliente_id' => $contrato->cliente_id,
+            'descricao' => 'Parcela 1/12 - ' . $contrato->numero,
+            'valor' => 1000,
+            'data_vencimento' => now()->addMonth()->toDateString(),
+            'status' => 'aberto',
+        ]);
+        $vencida = ContaReceber::create([
+            'contrato_venda_id' => $contrato->id,
+            'cliente_id' => $contrato->cliente_id,
+            'descricao' => 'Parcela 2/12 - ' . $contrato->numero,
+            'valor' => 1000,
+            'data_vencimento' => now()->subDay()->toDateString(),
+            'status' => 'vencido',
+        ]);
+        $recebida = ContaReceber::create([
+            'contrato_venda_id' => $contrato->id,
+            'cliente_id' => $contrato->cliente_id,
+            'descricao' => 'Parcela 0/12 - ' . $contrato->numero,
+            'valor' => 1000,
+            'valor_recebido' => 1000,
+            'data_vencimento' => now()->subMonth()->toDateString(),
+            'status' => 'recebido',
+        ]);
+
+        $contrato->update(['status' => 'distratado']);
+
+        $this->assertSame('cancelado', $aberta->fresh()->status);
+        $this->assertSame('cancelado', $vencida->fresh()->status);
+        $this->assertSame('recebido', $recebida->fresh()->status);
         $this->assertSame('disponivel', $unidade->fresh()->status);
     }
 
