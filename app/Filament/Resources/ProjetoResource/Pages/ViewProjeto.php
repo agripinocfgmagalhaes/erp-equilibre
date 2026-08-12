@@ -5,8 +5,8 @@ namespace App\Filament\Resources\ProjetoResource\Pages;
 use App\Filament\Resources\ProjetoResource;
 use App\Models\FaseObra;
 use App\Models\FasePadrao;
-use App\Models\Servico;
 use App\Models\OrcamentoItem;
+use App\Models\Servico;
 use App\Services\OrcamentoCsvImporter;
 use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
@@ -27,9 +27,8 @@ class ViewProjeto extends ViewRecord
     public $itemUnidade = '';
     public $itemQuantidade = null;
     public $itemValor = null;
-    public $itemTipo = 'material';
     public $itemServicoId = null;
-    
+    public $itemTipo = 'material';
     public $arquivoCsv = null;
 
     public function getTitle(): string
@@ -63,6 +62,21 @@ class ViewProjeto extends ViewRecord
             ->where('fase_padrao_id', $this->faseItens)->orderBy('id')->get();
     }
 
+    public function servicos()
+    {
+        return Servico::where('ativo', true)->orderBy('nome')->get();
+    }
+
+    public function preencherServico()
+    {
+        if (! $this->itemServicoId) return;
+        $s = Servico::find($this->itemServicoId);
+        if ($s) {
+            $this->itemDescricao = $s->nome;
+            $this->itemUnidade = $s->unidade_padrao;
+        }
+    }
+
     public function abrirItens($fasePadraoId) { $this->faseItens = $fasePadraoId; $this->resetItemForm(); }
     public function fecharItens() { $this->faseItens = null; $this->resetItemForm(); }
 
@@ -71,6 +85,7 @@ class ViewProjeto extends ViewRecord
         $this->faseAvanco = $faseObraId;
         $this->percentualNovo = (string) (FaseObra::find($faseObraId)->percentual ?? 0);
     }
+
     public function fecharAvanco() { $this->faseAvanco = null; }
 
     public function salvarAvanco()
@@ -96,7 +111,15 @@ class ViewProjeto extends ViewRecord
     {
         $q = (float) str_replace(',', '.', (string) $this->itemQuantidade);
         $v = (float) str_replace(',', '.', (string) $this->itemValor);
-        $dados = ['servico_id' => $this->itemServicoId ?: null, 'tipo' => $this->itemTipo, 'descricao' => $this->itemDescricao, 'unidade' => $this->itemUnidade, 'quantidade' => $q, 'valor_unitario' => $v, 'valor_total' => $q * $v];
+        $dados = [
+            'servico_id' => $this->itemServicoId ?: null,
+            'tipo' => $this->itemTipo,
+            'descricao' => $this->itemDescricao,
+            'unidade' => $this->itemUnidade,
+            'quantidade' => $q,
+            'valor_unitario' => $v,
+            'valor_total' => $q * $v,
+        ];
         if ($this->itemId) {
             OrcamentoItem::where('id', $this->itemId)->update($dados);
         } else {
@@ -117,34 +140,23 @@ class ViewProjeto extends ViewRecord
     public function resetItemForm()
     {
         $this->itemId = null; $this->itemDescricao = ''; $this->itemUnidade = '';
-        $this->itemQuantidade = null; $this->itemValor = null; $this->itemServicoId = null; $this->itemTipo = 'material';
-    }
-
-    public function servicos()
-    {
-        return Servico::where('ativo', true)->orderBy('nome')->get();
-    }
-
-    public function preencherServico()
-    {
-        if (! $this->itemServicoId) return;
-        $s = Servico::find($this->itemServicoId);
-        if ($s) {
-            $this->itemDescricao = $s->nome;
-            $this->itemUnidade = $s->unidade_padrao;
-        }
+        $this->itemQuantidade = null; $this->itemValor = null;
+        $this->itemServicoId = null; $this->itemTipo = 'material';
     }
 
     public function importarCsv()
     {
-        if (! $this->arquivoCsv) { Notification::make()->title('Escolha o arquivo CSV')->warning()->send(); return; }
+        if (! $this->arquivoCsv) {
+            Notification::make()->title('Escolha o arquivo CSV')->warning()->send();
+            return;
+        }
         try {
             $r = $this->getRecord();
             DB::table('orcamento_item_cronograma')->whereIn('orcamento_item_id', fn ($q) => $q->select('id')->from('orcamento_itens')->where('projeto_id', $r->id))->delete();
             DB::table('orcamento_itens')->where('projeto_id', $r->id)->delete();
             $res = app(OrcamentoCsvImporter::class)->importar($r->id, $this->arquivoCsv->getRealPath());
             $this->arquivoCsv = null;
-            Notification::make()->title('Orçamento importado')->body("{$res['itens']} itens, {$res['cronograma']} linhas de cronograma.")->success()->send();
+            Notification::make()->title('Orçamento importado')->body(is_array($res) ? json_encode($res) : '')->success()->send();
         } catch (\Throwable $e) {
             Notification::make()->title('Erro ao importar')->body($e->getMessage())->danger()->send();
         }
