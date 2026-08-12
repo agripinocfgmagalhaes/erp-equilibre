@@ -1,30 +1,25 @@
 <?php
-namespace App\Console\Commands;
+namespace App\Services;
 
 use App\Models\FasePadrao;
 use App\Models\OrcamentoItem;
 use App\Models\OrcamentoItemCronograma;
-use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
-class ImportarOrcamentoCsv extends Command
+class OrcamentoCsvImporter
 {
-    protected $signature = 'orcamento:importar {projeto_id} {caminho}';
-    protected $description = 'Importa orcamento padrao (CSV estilo Costa Azul) para orcamento_itens + cronograma mensal em linhas';
-
     private const MESES = [
         'jan' => 1, 'fev' => 2, 'mar' => 3, 'abr' => 4, 'mai' => 5, 'jun' => 6,
         'jul' => 7, 'ago' => 8, 'set' => 9, 'out' => 10, 'nov' => 11, 'dez' => 12,
     ];
 
-    public function handle(): int
+    /**
+     * @return array{itens: int, cronograma: int}
+     */
+    public function importar(int $projetoId, string $caminho): array
     {
-        $projetoId = (int) $this->argument('projeto_id');
-        $caminho = $this->argument('caminho');
-
         if (! is_file($caminho)) {
-            $this->error("Arquivo nao encontrado: {$caminho}");
-            return self::FAILURE;
+            throw new \RuntimeException("Arquivo nao encontrado: {$caminho}");
         }
 
         $handle = fopen($caminho, 'r');
@@ -35,8 +30,7 @@ class ImportarOrcamentoCsv extends Command
         fclose($handle);
 
         if (count($rows) < 5) {
-            $this->error('CSV sem linhas suficientes.');
-            return self::FAILURE;
+            throw new \RuntimeException('CSV sem linhas suficientes.');
         }
 
         $meses = [];
@@ -48,8 +42,7 @@ class ImportarOrcamentoCsv extends Command
         }
 
         if (empty($meses)) {
-            $this->error('Nao foi possivel detectar as colunas de meses no cabecalho.');
-            return self::FAILURE;
+            throw new \RuntimeException('Nao foi possivel detectar as colunas de meses no cabecalho.');
         }
 
         $totalItens = 0;
@@ -115,8 +108,7 @@ class ImportarOrcamentoCsv extends Command
             }
         });
 
-        $this->info("Importado: {$totalItens} itens de orcamento, {$totalCronograma} linhas de cronograma mensal.");
-        return self::SUCCESS;
+        return ['itens' => $totalItens, 'cronograma' => $totalCronograma];
     }
 
     private static function num($v): ?float

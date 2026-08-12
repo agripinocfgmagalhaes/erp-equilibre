@@ -8,7 +8,9 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Actions\ImportAction;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -72,7 +74,15 @@ class ProjetoResource extends Resource
                 ->color(fn ($record) => match (true) { $record->avancoFisico() >= 100 => 'success', $record->avancoFisico() >= 50 => 'info', $record->avancoFisico() > 0 => 'warning', default => 'gray' }),
         ])
         ->headerActions([ImportAction::make()->importer(ProjetoImporter::class)->label('Importar Planilha')])
-        ->recordActions([EditAction::make(), DeleteAction::make()])
+        ->recordActions([
+                Action::make("painel")->label("Painel")->icon("heroicon-o-presentation-chart-bar")->color("info")
+                    ->modalHeading(fn ($record) => $record->nome." — Painel da Obra")
+                    ->modalContent(fn ($record) => view("filament.painel-fases", ["data" => $record->painelCustoPorFase()]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel("Fechar")
+                    ->slideOver()->modalWidth("6xl"),
+                EditAction::make(), DeleteAction::make()
+            ])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
         ->defaultSort('nome')->dragReorderableColumns()->stickableColumns();
     }
@@ -87,7 +97,6 @@ class ProjetoResource extends Resource
         return [
             'index' => ListProjetos::route('/'),
             'create' => CreateProjeto::route('/create'),
-            'edit' => EditProjeto::route('/{record}/edit'),
-        ];
+            'edit' => EditProjeto::route('/{record}/edit'),        ];
     }
 }

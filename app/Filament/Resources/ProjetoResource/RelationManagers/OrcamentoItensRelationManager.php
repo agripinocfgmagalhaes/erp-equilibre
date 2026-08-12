@@ -15,6 +15,11 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Table;
 use App\Models\FasePadrao;
 use App\Models\Servico;
+use App\Services\OrcamentoCsvImporter;
+use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Storage;
 
 class OrcamentoItensRelationManager extends RelationManager
 {
@@ -58,7 +63,40 @@ class OrcamentoItensRelationManager extends RelationManager
                 TextColumn::make('valor_total')->label('Total')->money('BRL')->alignEnd()->sortable()->weight('medium'),
             ])
             ->filters([SelectFilter::make('fase_padrao_id')->label('Fase')->options(fn () => FasePadrao::orderBy('ordem')->pluck('nome', 'id'))])
-            ->headerActions([CreateAction::make()->label('+ Item')->slideOver()])
+            ->headerActions([
+                CreateAction::make()->label('+ Item')->slideOver(),
+                Action::make('importarOrcamentoCsv')
+                    ->label('Importar Orçamento (CSV)')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->color('success')
+                    ->form([
+                        FileUpload::make('arquivo')
+                            ->label('Arquivo CSV')
+                            ->disk('local')
+                            ->directory('imports-temp')
+                            ->required(),
+                    ])
+                    ->action(function (array $data) {
+                        $path = Storage::disk('local')->path($data['arquivo']);
+                        try {
+                            $resultado = app(OrcamentoCsvImporter::class)
+                                ->importar($this->getOwnerRecord()->id, $path);
+                            Notification::make()
+                                ->title('Orçamento importado')
+                                ->body("{$resultado['itens']} itens, {$resultado['cronograma']} linhas de cronograma.")
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('Erro ao importar')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        } finally {
+                            Storage::disk('local')->delete($data['arquivo']);
+                        }
+                    }),
+            ])
             ->recordActions([
                 EditAction::make()->slideOver()->iconButton(),
                 DeleteAction::make()->iconButton(),
