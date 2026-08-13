@@ -32,6 +32,7 @@ class ContaPagar extends Model
             'corretor' => Corretor::find($this->contato_id),
             'fornecedor' => Fornecedor::find($this->contato_id),
             'prestador' => Prestador::find($this->contato_id),
+            'funcionario' => Funcionario::find($this->contato_id),
             default => null,
         };
 

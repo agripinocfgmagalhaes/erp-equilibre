@@ -4,6 +4,7 @@ use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Filters\TernaryFilter;
@@ -38,6 +39,8 @@ class PrestadorResource extends Resource
             TextInput::make('especialidade')->label('Especialidade')->maxLength(100),
             TextInput::make('email')->label('E-mail')->email()->maxLength(100),
             TextInput::make('telefone')->label('Telefone')->maxLength(20),
+            Select::make('tipo_chave_pix')->label('Tipo Chave Pix')->options(['cpf' => 'CPF', 'cnpj' => 'CNPJ', 'telefone' => 'Telefone', 'email' => 'E-mail', 'aleatoria' => 'Aleatória']),
+            TextInput::make('chave_pix')->label('Chave Pix')->maxLength(150),
             Textarea::make('observacoes')->label('Observações')->rows(2)->columnSpanFull(),
             Toggle::make('ativo')->label('Ativo')->default(true),
         ])->columns(2);

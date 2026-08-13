@@ -90,6 +90,25 @@ class ContaPagarResource extends Resource
                 ])
                 ->fillForm(fn (ContaPagar $record) => ['valor_pago' => $record->valor])
                 ->action(fn (ContaPagar $record, array $data) => $record->darBaixa((float) $data['valor_pago'], $data['data_pagamento'], $data['conta_bancaria_id'] ?? null)),
+            Action::make('pagarPix')->label('Pagar via Pix')->icon('heroicon-o-bolt')->color('warning')->iconButton()
+                ->visible(fn (ContaPagar $record) => ! in_array($record->status, ['pago', 'cancelado']))
+                ->schema([
+                    TextInput::make('chave_pix_destino')->label('Chave Pix')->required(),
+                    Select::make('tipo_chave_pix_destino')->label('Tipo')->options(['cpf' => 'CPF', 'cnpj' => 'CNPJ', 'telefone' => 'Telefone', 'email' => 'E-mail', 'aleatoria' => 'Aleatória'])->required(),
+                    TextInput::make('valor')->label('Valor')->numeric()->prefix('R$')->step(0.01)->required(),
+                ])
+                ->fillForm(function (ContaPagar $record) {
+                    $resolvido = app(\App\Services\InterPixPagamentoService::class)->resolverChaveContato($record);
+                    return ['chave_pix_destino' => $resolvido['chave'], 'tipo_chave_pix_destino' => $resolvido['tipo'], 'valor' => $record->valor];
+                })
+                ->action(function (ContaPagar $record, array $data) {
+                    try {
+                        app(\App\Services\InterPixPagamentoService::class)->enviar($record, $data['chave_pix_destino'], $data['tipo_chave_pix_destino'], (float) $data['valor']);
+                        \Filament\Notifications\Notification::make()->title('Pix enviado')->success()->send();
+                    } catch (\Throwable $e) {
+                        \Filament\Notifications\Notification::make()->title('Falha ao enviar Pix')->body($e->getMessage())->danger()->send();
+                    }
+                }),
             EditAction::make()->slideOver()->modalWidth('4xl')->iconButton(),
             DeleteAction::make()->iconButton(),
         ])
