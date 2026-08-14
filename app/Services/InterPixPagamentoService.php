@@ -68,9 +68,7 @@ class InterPixPagamentoService
 
     /**
      * Envia um Pix Pagamento referente a uma ContaPagar.
-     * ATENCAO: path/payload segue o padrao geral da API Inter Pix Pagamentos,
-     * confirmar o endpoint exato (ex: /banking/v2/pix) no swagger antes de producao —
-     * e API diferente da de cobranca (boleto) mesmo usando o mesmo OAuth2/mTLS.
+     * Endpoint /banking/v2/pix validado em producao em 14/08/2026.
      */
     public function enviar(ContaPagar $conta, string $chavePix, string $tipoChave, ?float $valor = null): array
     {
@@ -104,6 +102,36 @@ class InterPixPagamentoService
 
         if (($data['status'] ?? null) === 'REALIZADO') {
             $conta->darBaixa($valor, now()->toDateString());
+        }
+
+        return $data;
+    }
+
+    /**
+     * Reconsulta o status oficial de um Pix Pagamento ja enviado e atualiza a ContaPagar.
+     * Chamado pelo webhook (que so avisa que algo mudou, nao traz o status definitivo confiavel)
+     * e pode tambem ser chamado manualmente/via schedule como fallback.
+     */
+    public function consultar(ContaPagar $conta): array
+    {
+        if (!$conta->inter_pix_e2e_id) {
+            throw new Exception('ContaPagar sem inter_pix_e2e_id - nunca foi enviada via Pix.');
+        }
+
+        $res = $this->http()->withToken($this->token())
+            ->get("{$this->baseUrl}/banking/v2/pix/{$conta->inter_pix_e2e_id}");
+
+        if ($res->failed()) {
+            throw new Exception('Falha ao consultar Pix: ' . $res->body());
+        }
+
+        $data = $res->json();
+        $status = $data['status'] ?? $conta->inter_pix_status;
+
+        $conta->update(['inter_pix_status' => $status]);
+
+        if ($status === 'REALIZADO' && $conta->status !== 'pago') {
+            $conta->darBaixa((float) $conta->valor, now()->toDateString());
         }
 
         return $data;

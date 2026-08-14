@@ -46,3 +46,5 @@ Route::get('/download/unidades-template', function () {
         fclose($handle);
     }, 'unidades_template.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
 })->middleware('throttle:template');
+
+Route::post('/webhooks/inter/pix-pagamento', [\App\Http\Controllers\InterWebhookController::class, 'receberPix'])->name('webhook.inter.pix-pagamento');
