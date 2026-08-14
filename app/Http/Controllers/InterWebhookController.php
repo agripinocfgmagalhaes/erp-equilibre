@@ -17,45 +17,35 @@ class InterWebhookController extends Controller
         Log::info('Webhook Inter recebido', $payload);
 
         $codigoSolicitacao = $payload['codigoSolicitacao'] ?? null;
-        if (!$codigoSolicitacao) {
-            return response()->json(['status' => 'ignorado']);
+        $e2eId = $payload['endToEndId'] ?? $payload['e2eId'] ?? null;
+
+        if ($codigoSolicitacao) {
+            $conta = ContaReceber::where('inter_codigo_solicitacao', $codigoSolicitacao)->first();
+            if ($conta) {
+                try {
+                    app(InterBoletoService::class)->consultar($conta);
+                    return response()->json(['status' => 'ok - cobranca']);
+                } catch (\Throwable $e) {
+                    Log::error('Erro ao processar webhook cobranca: ' . $e->getMessage());
+                    return response()->json(['status' => 'erro'], 200);
+                }
+            }
         }
 
-        $conta = ContaReceber::where('inter_codigo_solicitacao', $codigoSolicitacao)->first();
-        if (!$conta) {
-            return response()->json(['status' => 'conta nao encontrada']);
+        $idPix = $e2eId ?? $codigoSolicitacao;
+        if ($idPix) {
+            $conta = ContaPagar::where('inter_pix_e2e_id', $idPix)->first();
+            if ($conta) {
+                try {
+                    app(InterPixPagamentoService::class)->consultar($conta);
+                    return response()->json(['status' => 'ok - pix pagamento']);
+                } catch (\Throwable $e) {
+                    Log::error('Erro ao processar webhook pix pagamento: ' . $e->getMessage());
+                    return response()->json(['status' => 'erro'], 200);
+                }
+            }
         }
 
-        try {
-            app(InterBoletoService::class)->consultar($conta);
-        } catch (\Throwable $e) {
-            Log::error('Erro ao processar webhook Inter: ' . $e->getMessage());
-        }
-
-        return response()->json(['status' => 'ok']);
-    }
-
-    public function receberPix(Request $request): JsonResponse
-    {
-        $payload = $request->all();
-        Log::info('Webhook Inter Pix Pagamento recebido', $payload);
-
-        $e2eId = $payload['endToEndId'] ?? $payload['codigoSolicitacao'] ?? $payload['e2eId'] ?? null;
-        if (!$e2eId) {
-            return response()->json(['status' => 'ignorado - sem identificador']);
-        }
-
-        $conta = ContaPagar::where('inter_pix_e2e_id', $e2eId)->first();
-        if (!$conta) {
-            return response()->json(['status' => 'conta nao encontrada']);
-        }
-
-        try {
-            app(InterPixPagamentoService::class)->consultar($conta);
-        } catch (\Throwable $e) {
-            Log::error('Erro ao processar webhook Pix Pagamento: ' . $e->getMessage());
-        }
-
-        return response()->json(['status' => 'ok']);
+        return response()->json(['status' => 'ignorado - conta nao encontrada']);
     }
 }
