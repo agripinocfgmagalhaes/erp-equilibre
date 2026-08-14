@@ -31,9 +31,9 @@ class MedicaoResource extends Resource
     {
         return $schema->components([
             TextInput::make('numero')->label('Nº Medição')->numeric()->disabled(),
-            DatePicker::make('data_medicao')->label('Data da Medição')->required()->native(false)->displayFormat('d/m/Y'),
-            DatePicker::make('data_inicio_periodo')->label('Período Início')->required()->native(false)->displayFormat('d/m/Y'),
-            DatePicker::make('data_fim_periodo')->label('Período Fim')->required()->native(false)->displayFormat('d/m/Y'),
+            DatePicker::make('data_medicao')->label('Data da Medição')->required()->displayFormat('d/m/Y'),
+            DatePicker::make('data_inicio_periodo')->label('Período Início')->required()->displayFormat('d/m/Y'),
+            DatePicker::make('data_fim_periodo')->label('Período Fim')->required()->displayFormat('d/m/Y'),
             TextInput::make('valor_total')->label('Valor Medido')->prefix('R$')->required()
                 ->mask(RawJs::make('$money($input, \',\', \'.\')'))->extraInputAttributes(['type' => 'text'])
                 ->dehydrateStateUsing(fn ($state) => $state !== null ? (float) str_replace(['.', ','], ['', '.'], $state) : null)

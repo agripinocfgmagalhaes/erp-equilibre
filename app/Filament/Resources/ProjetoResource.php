@@ -47,8 +47,8 @@ class ProjetoResource extends Resource
                     ->options(['planejamento' => 'Planejamento', 'em_andamento' => 'Em Andamento', 'concluido' => 'Concluído', 'cancelado' => 'Cancelado']),
                 Select::make('cor')->label('Cor')->native(false)->default('gray')
                     ->options(['gray' => 'Cinza', 'primary' => 'Slate', 'success' => 'Verde', 'danger' => 'Vermelho', 'warning' => 'Amarelo', 'info' => 'Azul Claro', 'blue' => 'Azul', 'purple' => 'Roxo', 'pink' => 'Rosa', 'orange' => 'Laranja']),
-                DatePicker::make('data_inicio')->label('Início')->native(false)->displayFormat('d/m/Y'),
-                DatePicker::make('data_previsao_fim')->label('Previsão de Fim')->native(false)->displayFormat('d/m/Y'),
+                DatePicker::make('data_inicio')->label('Início')->displayFormat('d/m/Y'),
+                DatePicker::make('data_previsao_fim')->label('Previsão de Fim')->displayFormat('d/m/Y'),
                 TextInput::make('valor_orcamento')->label('Orçamento Total da Obra')->numeric()->prefix('R$')
                     ->mask(RawJs::make('$money($input, \',\', \'.\')'))->extraInputAttributes(['type' => 'text'])
                     ->stripCharacters('.')

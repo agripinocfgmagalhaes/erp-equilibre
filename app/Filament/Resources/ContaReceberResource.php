@@ -12,6 +12,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Actions\EditAction;
@@ -57,8 +58,8 @@ class ContaReceberResource extends Resource
             Section::make('Valores e Datas')->schema([
                 TextInput::make('valor')->label('Valor')->numeric()->prefix('R$')->step(0.01)->required(),
                 TextInput::make('valor_recebido')->label('Valor Recebido')->numeric()->prefix('R$')->step(0.01)->default(0)->readOnly(),
-                DatePicker::make('data_vencimento')->label('Vencimento')->native(false)->displayFormat('d/m/Y')->required(),
-                DatePicker::make('data_recebimento')->label('Data de Recebimento')->native(false)->displayFormat('d/m/Y')->readOnly(),
+                DatePicker::make('data_vencimento')->label('Vencimento')->displayFormat('d/m/Y')->required(),
+                DatePicker::make('data_recebimento')->label('Data de Recebimento')->displayFormat('d/m/Y')->readOnly(),
                 Textarea::make('observacoes')->label('Observações')->rows(2)->columnSpanFull(),
             ])->columns(2)->columnSpanFull(),
         ]);
@@ -71,13 +72,29 @@ class ContaReceberResource extends Resource
         ->modifyQueryUsing(fn (\Illuminate\Database\Eloquent\Builder $query) => $query->with(['projeto', 'planoConta', 'cliente', 'contaBancaria']))
         ->columns($livewire->isGridLayout() ? static::getGridTableColumns() : static::getListTableColumns())
         ->contentGrid(fn () => $livewire->isListLayout() ? null : ['md' => 2, 'lg' => 3])
-        ->filters([SelectFilter::make('status')->options(['aberto' => 'Aberto', 'recebido' => 'Recebido', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado'])])
+        ->filters([
+            SelectFilter::make('status')->options(['aberto' => 'Aberto', 'recebido' => 'Recebido', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado']),
+            SelectFilter::make('projeto_id')->label('Empreendimento')->relationship('projeto', 'nome')->searchable()->preload(),
+            SelectFilter::make('cliente_id')->label('Cliente')->relationship('cliente', 'nome')->searchable()->preload(),
+            SelectFilter::make('plano_conta_id')->label('Plano de Conta')->relationship('planoConta', 'nome')->searchable()->preload(),
+            SelectFilter::make('conta_bancaria_id')->label('Conta Bancária')->relationship('contaBancaria', 'nome')->searchable()->preload(),
+            Filter::make('data_vencimento')
+                ->form([
+                    DatePicker::make('de')->label('Vencimento de'),
+                    DatePicker::make('ate')->label('Vencimento até'),
+                ])
+                ->query(fn (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder => $query
+                    ->when($data['de'] ?? null, fn ($q, $date) => $q->whereDate('data_vencimento', '>=', $date))
+                    ->when($data['ate'] ?? null, fn ($q, $date) => $q->whereDate('data_vencimento', '<=', $date))
+                ),
+        ])
+        ->filtersFormColumns(2)
         ->recordActions([
             Action::make('darBaixa')->label('Dar Baixa')->icon('heroicon-o-check-circle')->color('success')->iconButton()
                 ->visible(fn (ContaReceber $record) => ! in_array($record->status, ['recebido', 'cancelado']))
                 ->schema([
                     TextInput::make('valor_recebido')->label('Valor Recebido')->numeric()->prefix('R$')->step(0.01)->required(),
-                    DatePicker::make('data_recebimento')->label('Data do Recebimento')->native(false)->displayFormat('d/m/Y')->default(now())->required(),
+                    DatePicker::make('data_recebimento')->label('Data do Recebimento')->displayFormat('d/m/Y')->default(now())->required(),
                     Select::make('conta_bancaria_id')->label('Conta Bancária')->options(ContaBancaria::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->required(),
                 ])
                 ->fillForm(fn (ContaReceber $record) => ['valor_recebido' => $record->valor])

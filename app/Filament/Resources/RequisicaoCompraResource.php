@@ -73,7 +73,7 @@ class RequisicaoCompraResource extends Resource
                 Hidden::make('solicitante_id')->default(fn () => Auth::id()),
                 Select::make('projeto_id')->label('Empreendimento')->options(Projeto::pluck('nome', 'id'))->searchable()->native(false)->nullable()->reactive()->afterStateUpdated(fn (callable $set) => $set('fase_obra_id', null)),
                 Select::make('fase_obra_id')->label('Fase da Obra')->options(fn (callable $get) => FaseObra::where('projeto_id', $get('projeto_id'))->pluck('nome', 'id'))->searchable()->native(false)->nullable()->disabled(fn (callable $get) => ! $get('projeto_id')),
-                DatePicker::make('data_requisicao')->label('Data')->native(false)->displayFormat('d/m/Y')->default(now())->required(),
+                DatePicker::make('data_requisicao')->label('Data')->displayFormat('d/m/Y')->default(now())->required(),
                 Textarea::make('justificativa')->label('Justificativa')->rows(2)->columnSpanFull(),
             ])->columns(3)->columnSpanFull()->disabled(fn (?RequisicaoCompra $record) => $record && $record->status !== 'rascunho'),
             Section::make('Itens Solicitados')->schema([

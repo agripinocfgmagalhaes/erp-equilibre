@@ -28,7 +28,7 @@ class AdmissaoLinkResource extends Resource
         return $schema->components([
             Select::make('projeto_id')->label('Obra')->relationship('projeto', 'nome')->searchable()->preload()->required(),
             Toggle::make('ativo')->label('Ativo')->default(true),
-            DatePicker::make('expira_em')->label('Expira em')->native(false)->displayFormat('d/m/Y'),
+            DatePicker::make('expira_em')->label('Expira em')->displayFormat('d/m/Y'),
         ])->columns(1);
     }
 

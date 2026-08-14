@@ -61,8 +61,8 @@ class ContratoVendaResource extends Resource
             Section::make('Dados do Contrato')->schema([
                 TextInput::make('numero')->label('Número')->disabled()->dehydrated(false)->maxLength(20),
                 Select::make('status')->label('Status')->native(false)->default('ativo')->options(['ativo' => 'Ativo', 'distratado' => 'Distratado', 'cancelado' => 'Cancelado']),
-                DatePicker::make('data_contrato')->label('Data do Contrato')->native(false)->displayFormat('d/m/Y')->default(now())->required(),
-                DatePicker::make('data_entrega_prevista')->label('Previsão de Entrega')->native(false)->displayFormat('d/m/Y'),
+                DatePicker::make('data_contrato')->label('Data do Contrato')->displayFormat('d/m/Y')->default(now())->required(),
+                DatePicker::make('data_entrega_prevista')->label('Previsão de Entrega')->displayFormat('d/m/Y'),
             ])->columns(2)->columnSpanFull(),
             Section::make('Partes')->schema([
                 Select::make('unidade_id')->label('Unidade')
@@ -93,7 +93,7 @@ class ContratoVendaResource extends Resource
                         TextInput::make('ordem')->label('Nº')->numeric()->default(1)->columnSpan(1)->required(),
                         TextInput::make('descricao')->label('Descrição')->maxLength(100)->default('Balão')->columnSpan(1)->required(),
                         TextInput::make('valor')->label('Valor')->numeric()->prefix('R$')->step(0.01)->columnSpan(1)->required(),
-                        DatePicker::make('data_vencimento')->label('Vencimento')->native(false)->displayFormat('d/m/Y')->columnSpan(1)->required(),
+                        DatePicker::make('data_vencimento')->label('Vencimento')->displayFormat('d/m/Y')->columnSpan(1)->required(),
                     ])->columns(4)->collapsible()->defaultItems(0)->orderColumn('ordem')->live()->afterStateUpdated(fn (callable $set, callable $get) => static::recalcParcelamento($set, $get))->columnSpanFull(),
 
                 TextInput::make('valor_parcelamento')->label('Valor Total do Parcelamento')->numeric()->prefix('R$')->step(0.01)->default(0)->readOnly(),
@@ -119,12 +119,12 @@ class ContratoVendaResource extends Resource
                 ->schema([
                     Section::make('Sinal')->schema([
                         TextInput::make('sinal_valor')->label('Valor do Sinal')->numeric()->prefix('R$')->step(0.01)->default(0),
-                        DatePicker::make('sinal_vencimento')->label('Data')->native(false)->displayFormat('d/m/Y')->default(now()),
+                        DatePicker::make('sinal_vencimento')->label('Data')->displayFormat('d/m/Y')->default(now()),
                     ])->columns(2),
                     Section::make('Parcelas Diretas')->schema([
                         TextInput::make('parcelas_valor_total')->label('Valor Total')->numeric()->prefix('R$')->step(0.01)->default(0),
                         TextInput::make('parcelas_quantidade')->label('Nº de Parcelas')->numeric()->default(1)->minValue(1)->maxValue(360),
-                        DatePicker::make('parcelas_primeiro_venc')->label('1º Vencimento')->native(false)->displayFormat('d/m/Y')->default(now()->addMonth()),
+                        DatePicker::make('parcelas_primeiro_venc')->label('1º Vencimento')->displayFormat('d/m/Y')->default(now()->addMonth()),
                     ])->columns(3),
                     Section::make('Balões (Reforços)')->schema([
                         \Filament\Forms\Components\Placeholder::make('baloes_info')->label('Serão gerados')->content(function ($record) {
@@ -135,7 +135,7 @@ class ContratoVendaResource extends Resource
                     ])->columns(1),
                     Section::make('Repasse Bancário (FGTS + Subsídio + Financiamento)')->schema([
                         TextInput::make('repasse_valor')->label('Valor do Repasse')->numeric()->prefix('R$')->step(0.01)->default(0),
-                        DatePicker::make('repasse_vencimento')->label('Previsão do Repasse')->native(false)->displayFormat('d/m/Y')->default(now()->addMonths(6)),
+                        DatePicker::make('repasse_vencimento')->label('Previsão do Repasse')->displayFormat('d/m/Y')->default(now()->addMonths(6)),
                     ])->columns(2),
                     Select::make('plano_conta_id')->label('Plano de Conta (Receita)')->options(PlanoConta::where('tipo', 'receita')->where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->nullable(),
                 ])

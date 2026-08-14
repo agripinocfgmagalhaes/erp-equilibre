@@ -39,7 +39,7 @@ class LancamentoBancarioResource extends Resource
             Select::make('tipo')->label('Tipo')->native(false)->required()->options(['entrada' => 'Entrada', 'saida' => 'Saída']),
             TextInput::make('descricao')->label('Descrição')->required()->maxLength(200)->columnSpanFull(),
             TextInput::make('valor')->label('Valor')->numeric()->prefix('R$')->step(0.01)->required(),
-            DatePicker::make('data')->label('Data')->native(false)->displayFormat('d/m/Y')->default(now())->required(),
+            DatePicker::make('data')->label('Data')->displayFormat('d/m/Y')->default(now())->required(),
             Textarea::make('observacoes')->label('Observações')->rows(2)->columnSpanFull(),
         ])->columns(2);
     }
@@ -96,8 +96,8 @@ class LancamentoBancarioResource extends Resource
                 SelectFilter::make('conta_bancaria_id')->label('Conta Bancária')->options(ContaBancaria::pluck('nome', 'id'))->searchable()->default(fn () => ContaBancaria::where('ativo', true)->value('id')),
                 SelectFilter::make('tipo')->options(['entrada' => 'Entrada', 'saida' => 'Saída']),
                 Filter::make('periodo')->schema([
-                    DatePicker::make('data_de')->label('De')->native(false)->displayFormat('d/m/Y'),
-                    DatePicker::make('data_ate')->label('Até')->native(false)->displayFormat('d/m/Y'),
+                    DatePicker::make('data_de')->label('De')->displayFormat('d/m/Y'),
+                    DatePicker::make('data_ate')->label('Até')->displayFormat('d/m/Y'),
                 ])->query(fn ($query, array $data) => $query->when($data['data_de'], fn ($q, $v) => $q->whereDate('data', '>=', $v))->when($data['data_ate'], fn ($q, $v) => $q->whereDate('data', '<=', $v)))->columns(2),
             ])
             ->filtersLayout(FiltersLayout::AboveContent)

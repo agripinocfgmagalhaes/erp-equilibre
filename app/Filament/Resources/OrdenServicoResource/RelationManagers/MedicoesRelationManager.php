@@ -29,9 +29,9 @@ class MedicoesRelationManager extends RelationManager
             TextInput::make('numero')->label('Nº Medição')->numeric()
                 ->default(fn ($livewire) => ($livewire->getOwnerRecord()->medicoes()->max('numero') ?? 0) + 1)
                 ->disabled()->dehydrated(),
-            DatePicker::make('data_medicao')->label('Data da Medição')->required()->native(false)->displayFormat('d/m/Y'),
-            DatePicker::make('data_inicio_periodo')->label('Período Início')->required()->native(false)->displayFormat('d/m/Y'),
-            DatePicker::make('data_fim_periodo')->label('Período Fim')->required()->native(false)->displayFormat('d/m/Y'),
+            DatePicker::make('data_medicao')->label('Data da Medição')->required()->displayFormat('d/m/Y'),
+            DatePicker::make('data_inicio_periodo')->label('Período Início')->required()->displayFormat('d/m/Y'),
+            DatePicker::make('data_fim_periodo')->label('Período Fim')->required()->displayFormat('d/m/Y'),
             TextInput::make('valor_total')->label('Valor Medido (soma dos itens)')->prefix('R$')->disabled()->dehydrated()->default(0)
                 ->formatStateUsing(fn ($state) => number_format((float) ($state ?? 0), 2, ',', '.')),
             Textarea::make('observacoes')->label('Observações')->rows(2)->columnSpanFull(),

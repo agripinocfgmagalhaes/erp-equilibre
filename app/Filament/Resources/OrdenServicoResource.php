@@ -3,6 +3,7 @@ namespace App\Filament\Resources;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
@@ -40,7 +41,7 @@ class OrdenServicoResource extends Resource
         return $schema->components([
             Section::make('Dados Gerais')->columnSpanFull()->schema([
                 TextInput::make('numero')->label('Número da OS')->required()->unique(ignoreRecord: true)->maxLength(20),
-                DatePicker::make('data')->label('Data')->required()->native(false)->displayFormat('d/m/Y'),
+                DatePicker::make('data')->label('Data')->required()->displayFormat('d/m/Y'),
                 Select::make('projeto_id')->label('Empreendimento')->native(false)->searchable()->required()
                     ->options(fn () => Projeto::pluck('nome', 'id'))->reactive(),
                 Select::make('prestador_id')->label('Prestador/Empreiteiro')->native(false)->searchable()
@@ -80,9 +81,9 @@ class OrdenServicoResource extends Resource
             Section::make('Valores e Datas')->columnSpanFull()->schema([
                 TextInput::make('valor_total')->label('Valor Total (soma dos itens)')->prefix('R$')->disabled()->dehydrated()->default(0)
                     ->formatStateUsing(fn ($state) => number_format((float) ($state ?? 0), 2, ',', '.')),
-                DatePicker::make('data_inicio')->label('Início Previsto')->native(false)->displayFormat('d/m/Y'),
-                DatePicker::make('data_previsao_fim')->label('Fim Previsto')->native(false)->displayFormat('d/m/Y'),
-                DatePicker::make('data_conclusao')->label('Data Conclusão')->native(false)->displayFormat('d/m/Y'),
+                DatePicker::make('data_inicio')->label('Início Previsto')->displayFormat('d/m/Y'),
+                DatePicker::make('data_previsao_fim')->label('Fim Previsto')->displayFormat('d/m/Y'),
+                DatePicker::make('data_conclusao')->label('Data Conclusão')->displayFormat('d/m/Y'),
             ])->columns(2),
         ]);
     }

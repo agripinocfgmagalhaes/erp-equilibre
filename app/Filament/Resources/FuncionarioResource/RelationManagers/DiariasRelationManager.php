@@ -21,8 +21,8 @@ class DiariasRelationManager extends RelationManager
     {
         return $schema->components([
             TextInput::make('valor_diaria')->label('Valor da Diária')->numeric()->prefix('R$')->required(),
-            DatePicker::make('vigente_desde')->label('Vigente Desde')->required()->native(false)->displayFormat('d/m/Y'),
-            DatePicker::make('vigente_ate')->label('Vigente Até')->native(false)->displayFormat('d/m/Y'),
+            DatePicker::make('vigente_desde')->label('Vigente Desde')->required()->displayFormat('d/m/Y'),
+            DatePicker::make('vigente_ate')->label('Vigente Até')->displayFormat('d/m/Y'),
         ])->columns(3);
     }
 

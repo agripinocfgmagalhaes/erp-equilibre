@@ -27,7 +27,7 @@ class ListLancamentosBancarios extends ListRecords
                     Select::make('conta_origem_id')->label('Conta de Origem')->options(ContaBancaria::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->required(),
                     Select::make('conta_destino_id')->label('Conta de Destino')->options(ContaBancaria::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->required()->different('conta_origem_id'),
                     TextInput::make('valor')->label('Valor')->numeric()->prefix('R$')->step(0.01)->required(),
-                    DatePicker::make('data')->label('Data')->native(false)->displayFormat('d/m/Y')->default(now())->required(),
+                    DatePicker::make('data')->label('Data')->displayFormat('d/m/Y')->default(now())->required(),
                     TextInput::make('descricao')->label('Descrição')->maxLength(200)->columnSpanFull(),
                 ])
                 ->action(function (array $data) {

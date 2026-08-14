@@ -43,7 +43,7 @@ class CotacoesRelationManager extends RelationManager
         return $schema->components([
             Select::make('fornecedor_id')->label('Fornecedor')
                 ->options(Fornecedor::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->required(),
-            DatePicker::make('data_cotacao')->label('Data da Cotação')->native(false)->displayFormat('d/m/Y')->default(now())->required(),
+            DatePicker::make('data_cotacao')->label('Data da Cotação')->displayFormat('d/m/Y')->default(now())->required(),
             TextInput::make('prazo_entrega_dias')->label('Prazo de Entrega (dias)')->numeric()->minValue(0),
             TextInput::make('condicao_pagamento')->label('Condição de Pagamento')->maxLength(100)->placeholder('Ex: 30/60/90 dias'),
             FileUpload::make('arquivo_path')->label('Anexo da Cotação')->directory('cotacoes-compra')->nullable(),

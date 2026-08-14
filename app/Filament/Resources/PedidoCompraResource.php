@@ -47,8 +47,8 @@ class PedidoCompraResource extends Resource
                     ->options(['rascunho' => 'Rascunho', 'aprovado' => 'Aprovado', 'recebido_parcial' => 'Recebido Parcial', 'recebido' => 'Recebido', 'cancelado' => 'Cancelado']),
                 Select::make('projeto_id')->label('Empreendimento')->options(Projeto::pluck('nome', 'id'))->searchable()->native(false)->nullable()->reactive()->afterStateUpdated(fn (callable $set) => $set('fase_obra_id', null)),
                 Select::make('fase_obra_id')->label('Fase da Obra')->options(fn (callable $get) => FaseObra::where('projeto_id', $get('projeto_id'))->pluck('nome', 'id'))->searchable()->native(false)->nullable()->disabled(fn (callable $get) => ! $get('projeto_id')),
-                DatePicker::make('data_pedido')->label('Data do Pedido')->native(false)->displayFormat('d/m/Y')->default(now())->required(),
-                DatePicker::make('data_previsao_entrega')->label('Previsão de Entrega')->native(false)->displayFormat('d/m/Y'),
+                DatePicker::make('data_pedido')->label('Data do Pedido')->displayFormat('d/m/Y')->default(now())->required(),
+                DatePicker::make('data_previsao_entrega')->label('Previsão de Entrega')->displayFormat('d/m/Y'),
                 Textarea::make('observacoes')->label('Observações')->rows(2)->columnSpanFull(),
             ])->columns(3)->columnSpanFull(),
             Section::make('Itens')->schema([
@@ -101,7 +101,7 @@ class PedidoCompraResource extends Resource
         ->recordActions([
             Action::make('gerarTitulo')->label('Gerar Título')->icon('heroicon-o-banknotes')->color('warning')
                 ->visible(fn (PedidoCompra $record) => ! ContaPagar::where('pedido_compra_id', $record->id)->exists())
-                ->schema([DatePicker::make('data_vencimento')->label('Vencimento')->native(false)->displayFormat('d/m/Y')->default(now()->addDays(30))->required()])
+                ->schema([DatePicker::make('data_vencimento')->label('Vencimento')->displayFormat('d/m/Y')->default(now()->addDays(30))->required()])
                 ->action(function (PedidoCompra $record, array $data) {
                     ContaPagar::create(['descricao' => 'Pedido de Compra '.$record->numero, 'contato_tipo' => 'fornecedor', 'contato_id' => $record->fornecedor_id, 'projeto_id' => $record->projeto_id, 'fase_obra_id' => $record->fase_obra_id, 'pedido_compra_id' => $record->id, 'valor' => $record->valor_total, 'data_vencimento' => $data['data_vencimento'], 'status' => 'aberto']);
                 })->successNotificationTitle('Título gerado com sucesso'),

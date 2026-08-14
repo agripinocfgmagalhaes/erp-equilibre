@@ -27,7 +27,7 @@ class OrdensServicoRelationManager extends RelationManager
     {
         return $schema->components([
             TextInput::make('numero')->label('Número da OS')->required()->unique(ignoreRecord: true)->maxLength(20),
-            DatePicker::make('data')->label('Data')->required()->native(false)->displayFormat('d/m/Y'),
+            DatePicker::make('data')->label('Data')->required()->displayFormat('d/m/Y'),
             Select::make('prestador_id')->label('Prestador/Empreiteiro')->native(false)->searchable()
                 ->options(Prestador::orderBy('nome')->pluck('nome', 'id')),
             Select::make('fase_obra_id')->label('Fase da Obra')->native(false)
@@ -37,9 +37,9 @@ class OrdensServicoRelationManager extends RelationManager
                 ->stripCharacters('.')
                 ->dehydrateStateUsing(fn ($state) => $state !== null ? (float) str_replace(['.', ','], ['', '.'], $state) : null)
                 ->formatStateUsing(fn ($state) => $state !== null ? number_format((float) $state, 2, ',', '.') : null),
-            DatePicker::make('data_inicio')->label('Início Previsto')->native(false)->displayFormat('d/m/Y'),
-            DatePicker::make('data_previsao_fim')->label('Fim Previsto')->native(false)->displayFormat('d/m/Y'),
-            DatePicker::make('data_conclusao')->label('Data Conclusão')->native(false)->displayFormat('d/m/Y'),
+            DatePicker::make('data_inicio')->label('Início Previsto')->displayFormat('d/m/Y'),
+            DatePicker::make('data_previsao_fim')->label('Fim Previsto')->displayFormat('d/m/Y'),
+            DatePicker::make('data_conclusao')->label('Data Conclusão')->displayFormat('d/m/Y'),
             Select::make('status')->label('Status')->native(false)->default('planejado')->required()
                 ->options(['planejado' => 'Planejado', 'em_execucao' => 'Em Execução', 'concluido' => 'Concluído', 'suspenso' => 'Suspenso']),
             Textarea::make('descricao')->label('Descrição')->rows(2)->columnSpanFull(),
