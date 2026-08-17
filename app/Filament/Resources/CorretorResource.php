@@ -16,8 +16,10 @@ use App\Filament\Resources\CorretorResource\Pages\ListCorretores;
 use App\Filament\Resources\CorretorResource\Pages\CreateCorretor;
 use App\Filament\Resources\CorretorResource\Pages\EditCorretor;
 use App\Filament\Resources\CorretorResource\Pages;
+use Filament\Forms\Components\Select;
 use App\Filament\Imports\CorretorImporter;
 use App\Models\Corretor;
+use App\Models\Imobiliaria;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -34,6 +36,15 @@ class CorretorResource extends Resource
     {
         return $schema->components([
             TextInput::make('nome')->label('Nome')->required()->maxLength(150)->columnSpanFull(),
+            Select::make('imobiliaria_id')->label('Imobiliária')->native(false)->searchable()->preload()
+                ->options(fn () => Imobiliaria::orderBy('nome')->pluck('nome', 'id'))
+                ->createOptionForm([
+                    TextInput::make('nome')->label('Nome')->required()->maxLength(150),
+                    TextInput::make('creci')->label('CRECI')->maxLength(20),
+                    TextInput::make('telefone')->label('Telefone')->maxLength(20),
+                ])
+                ->createOptionUsing(fn (array $data) => Imobiliaria::create($data)->id)
+                ->columnSpanFull(),
             TextInput::make('cpf_cnpj')->label('CPF/CNPJ')->maxLength(18)->unique(ignoreRecord: true),
             TextInput::make('creci')->label('CRECI')->maxLength(20),
             TextInput::make('email')->label('E-mail')->email()->maxLength(100),
@@ -47,6 +58,7 @@ class CorretorResource extends Resource
     {
         return $table->columns([
             TextColumn::make('nome')->label('Nome')->searchable()->sortable()->weight('medium'),
+            TextColumn::make('imobiliaria.nome')->label('Imobiliária')->searchable()->sortable()->placeholder('—'),
             TextColumn::make('creci')->sortable()->label('CRECI')->placeholder('—'),
             TextColumn::make('celular')->sortable()->label('Celular')->placeholder('—'),
             IconColumn::make('ativo')->sortable()->label('Ativo')->boolean(),

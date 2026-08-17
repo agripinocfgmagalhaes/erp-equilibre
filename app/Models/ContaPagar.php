@@ -10,7 +10,7 @@ class ContaPagar extends Model
 {
     protected $table = 'contas_pagar';
 
-    protected $fillable = ['descricao','numero_documento','contato_tipo','contato_id','plano_conta_id','conta_bancaria_id','projeto_id','fase_obra_id','fase_padrao_id','pedido_compra_id','ordem_servico_id','valor','valor_pago','data_vencimento','data_pagamento','status','observacoes'];
+    protected $fillable = ['descricao','numero_documento','contato_tipo','contato_id','plano_conta_id','conta_bancaria_id','projeto_id','fase_obra_id','fase_padrao_id','pedido_compra_id','ordem_servico_id','valor','valor_pago','data_vencimento','data_pagamento','status','observacoes','chave_pix_destino','tipo_chave_pix_destino','inter_pix_e2e_id','inter_pix_status','inter_pix_enviado_em'];
 
     protected $casts = ['valor' => 'decimal:2', 'valor_pago' => 'decimal:2', 'data_vencimento' => 'date', 'data_pagamento' => 'date'];
 

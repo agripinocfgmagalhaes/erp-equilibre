@@ -9,6 +9,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Grouping\Group;
+use Filament\Tables\Columns\Summarizers\Summarizer;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\Action;
@@ -45,9 +47,21 @@ class LancamentoBancarioResource extends Resource
     }
     public static function table(Table $table): Table
     {
+        $saldosPorContaEData = LancamentoBancario::query()
+            ->orderBy('conta_bancaria_id')->orderBy('data')->orderBy('id')
+            ->get()
+            ->groupBy('conta_bancaria_id')
+            ->flatMap(function ($lancamentos, $contaId) {
+                $acumulado = (float) (ContaBancaria::find($contaId)?->saldo_inicial ?? 0);
+                $porDia = [];
+                foreach ($lancamentos as $l) {
+                    $acumulado += $l->tipo === 'entrada' ? (float) $l->valor : -(float) $l->valor;
+                    $porDia[$contaId.'|'.$l->data->toDateString()] = $acumulado;
+                }
+                return $porDia;
+            })->toArray();
         return $table->modifyQueryUsing(fn (Builder $query) => $query->with('contaBancaria'))
             ->columns([
-                TextColumn::make('data')->label('Data')->date('d/m/Y')->sortable(),
                 TextColumn::make('contaBancaria.nome')->label('Conta')->sortable(),
                 TextColumn::make('descricao')->sortable()->label('Descrição')->searchable()->limit(50),
                 TextColumn::make('origem')->sortable()->label('Origem')->badge()
@@ -56,42 +70,23 @@ class LancamentoBancarioResource extends Resource
                 TextColumn::make('tipo')->sortable()->label('Tipo')->badge()
                     ->colors(['success' => 'entrada', 'danger' => 'saida'])
                     ->formatStateUsing(fn ($state) => $state === 'entrada' ? '▲ Entrada' : '▼ Saída'),
-                TextColumn::make('valor')->label('Valor')->money('BRL')->alignEnd()->sortable()->color(fn ($record) => $record->tipo === 'entrada' ? 'success' : 'danger'),
-                TextColumn::make('saldo_acumulado')->sortable()->label('Saldo')
-                    ->getStateUsing(function ($record, $livewire) {
-                        static $saldos = null;
-                        static $lastKey = null;
-                        $pageKey = $livewire->getTablePage().'_'.md5(json_encode($livewire->tableFilters ?? []));
-                        if ($saldos === null || $lastKey !== $pageKey) {
-                            $lastKey = $pageKey;
-                            $filters = $livewire->tableFilters ?? [];
-                            $contaId = $filters['conta_bancaria_id']['value'] ?? null;
-                            $saldoInicial = $contaId ? (float) ContaBancaria::find($contaId)?->saldo_inicial : 0;
-                            $query = LancamentoBancario::query()->orderBy('data')->orderBy('id');
-                            if ($contaId) $query->where('conta_bancaria_id', $contaId);
-                            $acumulado = $saldoInicial;
-                            $saldos = [];
-                            foreach ($query->get() as $l) {
-                                $acumulado += $l->tipo === 'entrada' ? (float) $l->valor : -(float) $l->valor;
-                                $saldos[$l->id] = $acumulado;
-                            }
-                        }
-                        return isset($saldos[$record->id]) ? 'R$ '.number_format($saldos[$record->id], 2, ',', '.') : '—';
-                    })
-                    ->color(function ($record, $livewire) {
-                        static $saldos2 = null;
-                        $filters = $livewire->tableFilters ?? [];
-                        $contaId = $filters['conta_bancaria_id']['value'] ?? null;
-                        if ($saldos2 === null) {
-                            $saldoInicial = $contaId ? (float) ContaBancaria::find($contaId)?->saldo_inicial : 0;
-                            $query = LancamentoBancario::query()->orderBy('data')->orderBy('id');
-                            if ($contaId) $query->where('conta_bancaria_id', $contaId);
-                            $acumulado = $saldoInicial; $saldos2 = [];
-                            foreach ($query->get() as $l) { $acumulado += $l->tipo === 'entrada' ? (float) $l->valor : -(float) $l->valor; $saldos2[$l->id] = $acumulado; }
-                        }
-                        return ($saldos2[$record->id] ?? 0) >= 0 ? 'success' : 'danger';
-                    }),
+                TextColumn::make('valor')->label('Valor')->money('BRL')->alignEnd()->sortable()->color(fn ($record) => $record->tipo === 'entrada' ? 'success' : 'danger')
+                    ->summarize(
+                        Summarizer::make()->label('Saldo do dia')
+                            ->using(function ($query) use ($saldosPorContaEData) {
+                                $first = (clone $query)->first();
+                                if (! $first) return null;
+                                $key = $first->conta_bancaria_id.'|'.$first->data->toDateString();
+                                return $saldosPorContaEData[$key] ?? 0;
+                            })
+                            ->formatStateUsing(fn ($state) => 'R$ '.number_format((float) $state, 2, ',', '.'))
+                    ),
             ])
+            ->groups([
+                Group::make('data')->label('Data')
+                    ->getTitleFromRecordUsing(fn ($record) => $record->data->format('d/m/Y')),
+            ])
+            ->defaultGroup('data')
             ->filters([
                 SelectFilter::make('conta_bancaria_id')->label('Conta Bancária')->options(ContaBancaria::pluck('nome', 'id'))->searchable()->default(fn () => ContaBancaria::where('ativo', true)->value('id')),
                 SelectFilter::make('tipo')->options(['entrada' => 'Entrada', 'saida' => 'Saída']),
