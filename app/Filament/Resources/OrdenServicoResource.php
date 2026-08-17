@@ -4,15 +4,19 @@ use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Repeater;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use App\Models\Medicao;
+use App\Models\MedicaoItem;
 use App\Filament\Resources\OrdenServicoResource\Pages\ListOrdenServico;
 use App\Filament\Resources\OrdenServicoResource\Pages\CreateOrdenServico;
 use App\Filament\Resources\OrdenServicoResource\Pages\EditOrdenServico;
@@ -55,32 +59,68 @@ class OrdenServicoResource extends Resource
             Section::make('Itens Contratados')->columnSpanFull()->schema([
                 Repeater::make('itens')->relationship('itens')->label('')
                     ->schema([
-                        Select::make('orcamento_item_id')->label('Item do Orçamento (opcional)')->native(false)->searchable()
-                            ->options(fn ($get) => OrcamentoItem::where('fase_padrao_id', $get('../../../fase_padrao_id'))->pluck('descricao', 'id'))
+                        Select::make('item_selecionado')->label('Serviço')->native(false)->searchable()->required()->live()
+                            ->options(function ($get) {
+                                $itens = OrcamentoItem::where('fase_padrao_id', $get('../../../fase_padrao_id'))->pluck('descricao', 'id');
+                                if ($itens->isNotEmpty()) return $itens->mapWithKeys(fn ($desc, $id) => ["oi_{$id}" => $desc]);
+                                return Servico::where('ativo', true)->pluck('nome', 'id')->mapWithKeys(fn ($nome, $id) => ["sv_{$id}" => $nome]);
+                            })
+                            ->afterStateHydrated(function ($component, $record) {
+                                if ($record?->orcamento_item_id) $component->state('oi_'.$record->orcamento_item_id);
+                                elseif ($record?->servico_id) $component->state('sv_'.$record->servico_id);
+                            })
                             ->afterStateUpdated(function ($state, callable $set) {
-                                if (! $state) return;
-                                $oi = OrcamentoItem::find($state);
-                                if ($oi) { $set('descricao', $oi->descricao); $set('unidade', $oi->unidade); $set('valor_unitario', $oi->valor_unitario); $set('servico_id', $oi->servico_id); }
-                            })->live()->columnSpanFull(),
-                        Select::make('servico_id')->label('Serviço (catálogo)')->native(false)->searchable()
-                            ->options(fn () => Servico::where('ativo', true)->pluck('nome', 'id'))
-                            ->afterStateUpdated(function ($state, callable $set) {
-                                if (! $state) return;
-                                $s = Servico::find($state);
-                                if ($s) { $set('descricao', $s->nome); $set('unidade', $s->unidade_padrao); }
-                            })->live(),
-                        TextInput::make('descricao')->label('Descrição do Serviço')->required(),
-                        TextInput::make('unidade')->label('Unidade')->maxLength(10),
-                        TextInput::make('quantidade_contratada')->label('Quantidade')->numeric()->required(),
+                                if (! $state || ! str_contains($state, '_')) return;
+                                [$tipo, $id] = explode('_', $state, 2);
+                                if ($tipo === 'oi') {
+                                    $oi = OrcamentoItem::find($id);
+                                    if ($oi) { $set('orcamento_item_id', $oi->id); $set('servico_id', $oi->servico_id); $set('descricao', $oi->descricao); $set('unidade', $oi->unidade); $set('valor_unitario', $oi->valor_unitario); }
+                                } else {
+                                    $s = Servico::find($id);
+                                    if ($s) { $set('orcamento_item_id', null); $set('servico_id', $s->id); $set('descricao', $s->nome); $set('unidade', $s->unidade_padrao); }
+                                }
+                            })
+                            ->dehydrated(false)->columnSpan(2),
+                        Hidden::make('orcamento_item_id'),
+                        Hidden::make('servico_id'),
+                        Hidden::make('descricao')->required(),
+                        Hidden::make('unidade'),
+                        TextInput::make('quantidade_contratada')->label('Quantidade')->numeric()->required()->live(onBlur: true),
                         TextInput::make('valor_unitario')->label('Valor Unitário')->prefix('R$')->required()
                             ->mask(RawJs::make('$money($input, \',\', \'.\')'))->extraInputAttributes(['type' => 'text'])
                             ->dehydrateStateUsing(fn ($state) => $state !== null ? (float) str_replace(['.', ','], ['', '.'], $state) : null)
-                            ->formatStateUsing(fn ($state) => $state !== null ? number_format((float) $state, 2, ',', '.') : null),
-                    ])->columns(3)->itemLabel(fn (array $state): ?string => $state['descricao'] ?? 'Novo item')->addActionLabel('+ Item')->collapsible(),
+                            ->formatStateUsing(fn ($state) => $state !== null ? number_format((float) $state, 2, ',', '.') : null)
+                            ->live(onBlur: true),
+                        Placeholder::make('item_total')->label('Total')
+                            ->content(function ($get) {
+                                $qtd = (float) ($get('quantidade_contratada') ?? 0);
+                                $valorStr = (string) ($get('valor_unitario') ?? '0');
+                                $valor = (float) str_replace(['.', ','], ['', '.'], $valorStr);
+                                return 'R$ '.number_format($qtd * $valor, 2, ',', '.');
+                            }),
+                    ])->columns(5)->itemLabel(fn (array $state): ?string => $state['descricao'] ?? 'Novo item')->addActionLabel('+ Item')->collapsible(),
             ]),
             Section::make('Valores e Datas')->columnSpanFull()->schema([
-                TextInput::make('valor_total')->label('Valor Total (soma dos itens)')->prefix('R$')->disabled()->dehydrated()->default(0)
-                    ->formatStateUsing(fn ($state) => number_format((float) ($state ?? 0), 2, ',', '.')),
+                Placeholder::make('valor_total_display')->label('Valor Total (soma dos itens)')
+                    ->content(function ($get) {
+                        $total = 0;
+                        foreach (($get('itens') ?? []) as $item) {
+                            $qtd = (float) ($item['quantidade_contratada'] ?? 0);
+                            $valor = (float) str_replace(['.', ','], ['', '.'], (string) ($item['valor_unitario'] ?? '0'));
+                            $total += $qtd * $valor;
+                    }
+                    return 'R$ '.number_format($total, 2, ',', '.');
+                    }),
+                Hidden::make('valor_total')
+                    ->dehydrateStateUsing(function ($get) {
+                        $total = 0;
+                        foreach (($get('itens') ?? []) as $item) {
+                            $qtd = (float) ($item['quantidade_contratada'] ?? 0);
+                            $valor = (float) str_replace(['.', ','], ['', '.'], (string) ($item['valor_unitario'] ?? '0'));
+                        $total += $qtd * $valor;
+                    }
+                    return $total;
+                    }),
                 DatePicker::make('data_inicio')->label('Início Previsto')->displayFormat('d/m/Y'),
                 DatePicker::make('data_previsao_fim')->label('Fim Previsto')->displayFormat('d/m/Y'),
                 DatePicker::make('data_conclusao')->label('Data Conclusão')->displayFormat('d/m/Y'),
@@ -105,7 +145,68 @@ class OrdenServicoResource extends Resource
                 ->formatStateUsing(fn ($s) => ['planejado' => 'Planejado', 'em_execucao' => 'Em Execução', 'concluido' => 'Concluído', 'suspenso' => 'Suspenso'][$s] ?? $s),
         ])
         ->modifyQueryUsing(fn ($query) => $query->with(['projeto', 'prestador']))
-        ->recordActions([EditAction::make()->slideOver()->modalWidth('5xl'), DeleteAction::make()])
+        ->recordActions([
+            Action::make('medir')->label('Medir')->icon('heroicon-o-clipboard-document-check')->color('info')->iconButton()
+                ->slideOver()->modalWidth('4xl')
+                ->fillForm(function ($record) {
+                    $rows = [];
+                    foreach ($record->itens as $item) {
+                        $acumulado = (float) (MedicaoItem::where('ordem_servico_item_id', $item->id)->orderByDesc('id')->value('quantidade_acumulada') ?? 0);
+                        $saldo = (float) $item->quantidade_contratada - $acumulado;
+                        $rows[] = [
+                            'ordem_servico_item_id' => $item->id,
+                            'descricao_item' => $item->descricao,
+                            'saldo' => number_format($saldo, 2, ',', '.'),
+                            'quantidade_periodo' => 0,
+                        ];
+                    }
+                    return [
+                        'numero' => ((int) $record->medicoes()->max('numero')) + 1,
+                        'data_medicao' => now()->toDateString(),
+                        'itens' => $rows,
+                    ];
+                })
+                ->schema([
+                    TextInput::make('numero')->label('Nº Medição')->numeric()->disabled()->dehydrated(),
+                    DatePicker::make('data_medicao')->label('Data da Medição')->required()->displayFormat('d/m/Y'),
+                    DatePicker::make('data_inicio_periodo')->label('Período Início')->required()->displayFormat('d/m/Y'),
+                    DatePicker::make('data_fim_periodo')->label('Período Fim')->required()->displayFormat('d/m/Y'),
+                    Textarea::make('observacoes')->label('Observações')->rows(2)->columnSpanFull(),
+                    Repeater::make('itens')->label('Itens Medidos')
+                        ->schema([
+                            TextInput::make('ordem_servico_item_id')->hidden()->dehydrated(),
+                            TextInput::make('descricao_item')->label('Item')->disabled()->dehydrated(),
+                            TextInput::make('saldo')->label('Saldo Disponível')->disabled()->dehydrated(),
+                            TextInput::make('quantidade_periodo')->label('Qtd. Executada')->numeric()->required()->default(0),
+                        ])->columns(3)->addable(false)->deletable(false)->reorderable(false)
+                        ->itemLabel(fn (array $state) => $state['descricao_item'] ?? null)
+                        ->columnSpanFull(),
+                ])
+                ->action(function (array $data, $record) {
+                    $medicao = Medicao::create([
+                        'ordem_servico_id' => $record->id,
+                        'numero' => $data['numero'],
+                        'data_medicao' => $data['data_medicao'],
+                        'data_inicio_periodo' => $data['data_inicio_periodo'],
+                        'data_fim_periodo' => $data['data_fim_periodo'],
+                        'observacoes' => $data['observacoes'] ?? null,
+                        'valor_total' => 0,
+                        'status' => 'rascunho',
+                    ]);
+                    foreach ($data['itens'] as $row) {
+                        MedicaoItem::create([
+                            'medicao_id' => $medicao->id,
+                            'ordem_servico_item_id' => $row['ordem_servico_item_id'],
+                            'quantidade_periodo' => $row['quantidade_periodo'],
+                            'quantidade_acumulada' => 0,
+                            'valor_total' => 0,
+                        ]);
+                    }
+                    \Filament\Notifications\Notification::make()->title('Medição criada')->success()->send();
+                }),
+            EditAction::make()->slideOver()->modalWidth('full')->iconButton(),
+            DeleteAction::make()->iconButton(),
+        ])
         ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
         ->defaultSort('numero')->dragReorderableColumns()->stickableColumns();
     }

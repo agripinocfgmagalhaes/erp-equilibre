@@ -1,14 +1,14 @@
 <?php
 namespace App\Filament\Resources\MedicaoResource\Pages;
 use App\Filament\Resources\MedicaoResource;
-use Filament\Resources\Pages\ListRecords;
-use Filament\Actions\CreateAction;
+use Filament\Resources\Pages\EditRecord;
+use Filament\Actions\DeleteAction;
 
-class ListMedicoes extends ListRecords
+class EditMedicao extends EditRecord
 {
     protected static string $resource = MedicaoResource::class;
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('+ Medição')->slideOver()->modalWidth('full')];
+        return [DeleteAction::make()->visible(fn ($record) => $record->status === 'rascunho')];
     }
 }
