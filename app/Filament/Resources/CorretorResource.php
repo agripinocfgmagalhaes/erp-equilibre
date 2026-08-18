@@ -49,7 +49,6 @@ class CorretorResource extends Resource
             TextInput::make('creci')->label('CRECI')->maxLength(20),
             TextInput::make('email')->label('E-mail')->email()->maxLength(100),
             TextInput::make('telefone')->label('Telefone')->maxLength(20),
-            TextInput::make('celular')->label('Celular')->maxLength(20),
             Textarea::make('observacoes')->label('Observações')->rows(2)->columnSpanFull(),
             Toggle::make('ativo')->label('Ativo')->default(true),
         ])->columns(2);
@@ -60,7 +59,6 @@ class CorretorResource extends Resource
             TextColumn::make('nome')->label('Nome')->searchable()->sortable()->weight('medium'),
             TextColumn::make('imobiliaria.nome')->label('Imobiliária')->searchable()->sortable()->placeholder('—'),
             TextColumn::make('creci')->sortable()->label('CRECI')->placeholder('—'),
-            TextColumn::make('celular')->sortable()->label('Celular')->placeholder('—'),
             IconColumn::make('ativo')->sortable()->label('Ativo')->boolean(),
         ])
         ->filters([TernaryFilter::make('ativo')->trueLabel('Ativos')->falseLabel('Inativos')])
