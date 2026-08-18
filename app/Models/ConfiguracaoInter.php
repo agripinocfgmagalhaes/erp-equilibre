@@ -25,6 +25,7 @@ class ConfiguracaoInter extends Model
         return $this->key_path ? Storage::disk('local')->path($this->key_path) : null;
     }
 
+    public function contaBancaria() { return $this->belongsTo(\App\Models\ContaBancaria::class); }
     public function configurado(): bool
     {
         return $this->client_id && $this->client_secret && $this->cert_path && $this->key_path;

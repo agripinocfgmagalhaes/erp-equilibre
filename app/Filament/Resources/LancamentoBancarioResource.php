@@ -70,6 +70,8 @@ class LancamentoBancarioResource extends Resource
                 TextColumn::make('tipo')->sortable()->label('Tipo')->badge()
                     ->colors(['success' => 'entrada', 'danger' => 'saida'])
                     ->formatStateUsing(fn ($state) => $state === 'entrada' ? '▲ Entrada' : '▼ Saída'),
+                Tables\Columns\IconColumn::make('conciliado')->label('Conciliado')->boolean()
+                    ->visible(fn ($record) => $record?->origem === 'extrato_inter' || true),
                 TextColumn::make('valor')->label('Valor')->money('BRL')->alignEnd()->sortable()->color(fn ($record) => $record->tipo === 'entrada' ? 'success' : 'danger')
                     ->summarize(
                         Summarizer::make()->label('Saldo do dia')
@@ -89,6 +91,8 @@ class LancamentoBancarioResource extends Resource
             ])
             ->defaultGroup('data')
             ->filters([
+                Filter::make('pendentes')->label('Somente pendentes de conciliação')
+                    ->query(fn ($query) => $query->where('origem', 'extrato_inter')->where('conciliado', false)),
                 SelectFilter::make('tipo')->options(['entrada' => 'Entrada', 'saida' => 'Saída']),
                 Filter::make('periodo')->schema([
                     DatePicker::make('data_de')->label('De')->displayFormat('d/m/Y'),
@@ -96,6 +100,54 @@ class LancamentoBancarioResource extends Resource
                 ])->query(fn ($query, array $data) => $query->when($data['data_de'], fn ($q, $v) => $q->whereDate('data', '>=', $v))->when($data['data_ate'], fn ($q, $v) => $q->whereDate('data', '<=', $v)))->columns(2),
             ])
             ->recordActions([
+                Action::make('conciliar')->label('Conciliar')->icon('heroicon-o-link')->color('warning')
+                    ->visible(fn (LancamentoBancario $record) => $record->origem === 'extrato_inter' && ! $record->conciliado)
+                    ->schema(function (LancamentoBancario $record) {
+                        $opcoes = ['arquivar' => 'Arquivar sem vincular (tarifa, IOF, etc.)'];
+                        if ($record->tipo === 'saida') $opcoes = ['vincular_cp' => 'Vincular a Conta a Pagar existente'] + $opcoes;
+                        if ($record->tipo === 'entrada') $opcoes = ['vincular_cr' => 'Vincular a Conta a Receber existente', 'gerar_cr' => 'Gerar nova Conta a Receber'] + $opcoes;
+                        return [
+                            Select::make('destino')->label('O que fazer com esse lançamento?')->options($opcoes)->required()->live()->native(false),
+                            Select::make('titulo_id')->label('Título')->searchable()->native(false)
+                                ->options(function (\Filament\Schemas\Components\Utilities\Get $get) use ($record) {
+                                    if ($get('destino') === 'vincular_cp') {
+                                        return \App\Models\ContaPagar::whereNotIn('status', ['pago', 'cancelado'])->get()->mapWithKeys(fn ($c) => [$c->id => "#{$c->id} - {$c->descricao} - R$ " . number_format($c->valor, 2, ',', '.')]);
+                                    }
+                                    if ($get('destino') === 'vincular_cr') {
+                                        return \App\Models\ContaReceber::whereNotIn('status', ['pago', 'cancelado'])->get()->mapWithKeys(fn ($c) => [$c->id => "#{$c->id} - {$c->descricao} - R$ " . number_format($c->valor, 2, ',', '.')]);
+                                    }
+                                    return [];
+                                })
+                                ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => in_array($get('destino'), ['vincular_cp', 'vincular_cr'])),
+                            Select::make('cliente_id')->label('Cliente')->relationship('cliente', 'nome')->searchable()->native(false)
+                                ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('destino') === 'gerar_cr'),
+                        ];
+                    })
+                    ->action(function (LancamentoBancario $record, array $data) {
+                        if ($data['destino'] === 'vincular_cp') {
+                            $conta = \App\Models\ContaPagar::find($data['titulo_id']);
+                            $conta?->darBaixa($record->valor, $record->data->toDateString());
+                            $record->update(['conciliado' => true, 'conciliado_em' => now(), 'conciliado_por' => auth()->id(), 'origem_id' => $conta?->id]);
+                        } elseif ($data['destino'] === 'vincular_cr') {
+                            $conta = \App\Models\ContaReceber::find($data['titulo_id']);
+                            $conta?->update(['status' => 'pago', 'valor_recebido' => $record->valor, 'data_recebimento' => $record->data]);
+                            $record->update(['conciliado' => true, 'conciliado_em' => now(), 'conciliado_por' => auth()->id(), 'origem_id' => $conta?->id]);
+                        } elseif ($data['destino'] === 'gerar_cr') {
+                            $novaConta = \App\Models\ContaReceber::create([
+                                'descricao' => $record->descricao,
+                                'cliente_id' => $data['cliente_id'] ?? null,
+                                'valor' => $record->valor,
+                                'valor_recebido' => $record->valor,
+                                'data_vencimento' => $record->data,
+                                'data_recebimento' => $record->data,
+                                'status' => 'pago',
+                            ]);
+                            $record->update(['conciliado' => true, 'conciliado_em' => now(), 'conciliado_por' => auth()->id(), 'origem_id' => $novaConta->id]);
+                        } else {
+                            $record->update(['conciliado' => true, 'conciliado_em' => now(), 'conciliado_por' => auth()->id()]);
+                        }
+                        Notification::make()->title('Lançamento conciliado')->success()->send();
+                    }),
                 EditAction::make()->slideOver()->iconButton()->visible(fn (LancamentoBancario $record) => $record->origem === 'manual'),
                 DeleteAction::make()->iconButton()->visible(fn (LancamentoBancario $record) => $record->origem === 'manual'),
             ])

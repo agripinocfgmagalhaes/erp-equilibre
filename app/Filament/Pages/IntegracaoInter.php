@@ -41,6 +41,7 @@ class IntegracaoInter extends Page implements HasForms
                 TextInput::make('client_id')->label('Client ID')->required(),
                 TextInput::make('client_secret')->label('Client Secret')->password()->revealable()->required(),
                 TextInput::make('conta_corrente')->label('Conta Corrente'),
+                \Filament\Forms\Components\Select::make('conta_bancaria_id')->label('Conta Bancaria (sistema)')->relationship('contaBancaria', 'nome')->searchable()->preload()->helperText('Qual conta bancaria do ERP corresponde a essa integracao Inter'),
                 TextInput::make('cedente_cnpj')->label('CNPJ Cedente')->required()->mask('99.999.999/9999-99'),
                 FileUpload::make('cert_path')->label('Certificado (.crt)')
                     ->disk('local')->directory('inter')->visibility('private')
