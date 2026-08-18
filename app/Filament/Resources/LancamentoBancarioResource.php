@@ -119,7 +119,7 @@ class LancamentoBancarioResource extends Resource
                                     return [];
                                 })
                                 ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => in_array($get('destino'), ['vincular_cp', 'vincular_cr'])),
-                            Select::make('cliente_id')->label('Cliente')->relationship('cliente', 'nome')->searchable()->native(false)
+                            Select::make('cliente_id')->label('Cliente')->options(fn () => \App\Models\Cliente::orderBy('nome')->pluck('nome', 'id'))->searchable()->native(false)
                                 ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('destino') === 'gerar_cr'),
                         ];
                     })
