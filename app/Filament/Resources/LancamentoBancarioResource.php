@@ -114,7 +114,7 @@ class LancamentoBancarioResource extends Resource
                                         return \App\Models\ContaPagar::whereNotIn('status', ['pago', 'cancelado'])->get()->mapWithKeys(fn ($c) => [$c->id => "#{$c->id} - {$c->descricao} - R$ " . number_format($c->valor, 2, ',', '.')]);
                                     }
                                     if ($get('destino') === 'vincular_cr') {
-                                        return \App\Models\ContaReceber::whereNotIn('status', ['pago', 'cancelado'])->get()->mapWithKeys(fn ($c) => [$c->id => "#{$c->id} - {$c->descricao} - R$ " . number_format($c->valor, 2, ',', '.')]);
+                                        return \App\Models\ContaReceber::whereNotIn('status', ['recebido', 'cancelado'])->get()->mapWithKeys(fn ($c) => [$c->id => "#{$c->id} - {$c->descricao} - R$ " . number_format($c->valor, 2, ',', '.')]);
                                     }
                                     return [];
                                 })
@@ -130,7 +130,7 @@ class LancamentoBancarioResource extends Resource
                             $record->update(['conciliado' => true, 'conciliado_em' => now(), 'conciliado_por' => auth()->id(), 'origem_id' => $conta?->id]);
                         } elseif ($data['destino'] === 'vincular_cr') {
                             $conta = \App\Models\ContaReceber::find($data['titulo_id']);
-                            $conta?->update(['status' => 'pago', 'valor_recebido' => $record->valor, 'data_recebimento' => $record->data]);
+                            $conta?->update(['status' => 'recebido', 'valor_recebido' => $record->valor, 'data_recebimento' => $record->data]);
                             $record->update(['conciliado' => true, 'conciliado_em' => now(), 'conciliado_por' => auth()->id(), 'origem_id' => $conta?->id]);
                         } elseif ($data['destino'] === 'gerar_cr') {
                             $novaConta = \App\Models\ContaReceber::create([
@@ -140,7 +140,7 @@ class LancamentoBancarioResource extends Resource
                                 'valor_recebido' => $record->valor,
                                 'data_vencimento' => $record->data,
                                 'data_recebimento' => $record->data,
-                                'status' => 'pago',
+                                'status' => 'recebido',
                             ]);
                             $record->update(['conciliado' => true, 'conciliado_em' => now(), 'conciliado_por' => auth()->id(), 'origem_id' => $novaConta->id]);
                         } else {
