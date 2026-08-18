@@ -59,6 +59,8 @@ class CorretorResource extends Resource
             TextColumn::make('nome')->label('Nome')->searchable()->sortable()->weight('medium'),
             TextColumn::make('imobiliaria.nome')->label('Imobiliária')->searchable()->sortable()->placeholder('—'),
             TextColumn::make('creci')->sortable()->label('CRECI')->placeholder('—'),
+            TextColumn::make('telefone')->sortable()->label('Telefone')->placeholder('—'),
+            TextColumn::make('email')->sortable()->label('E-mail')->placeholder('—')->toggleable(isToggledHiddenByDefault: true),
             IconColumn::make('ativo')->sortable()->label('Ativo')->boolean(),
         ])
         ->filters([TernaryFilter::make('ativo')->trueLabel('Ativos')->falseLabel('Inativos')])
