@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Storage;
 class ConfiguracaoInter extends Model
 {
     protected $table = 'configuracoes_inter';
-    protected $fillable = ['ambiente', 'client_id', 'client_secret', 'conta_corrente', 'cedente_cnpj', 'cert_path', 'key_path'];
+    protected $fillable = ['ambiente', 'client_id', 'client_secret', 'conta_corrente', 'cedente_cnpj', 'cert_path', 'key_path', 'conta_bancaria_id'];
     protected $casts = ['client_secret' => 'encrypted'];
 
     public static function atual(): self
