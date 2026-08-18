@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class LancamentoBancario extends Model
 {
     protected $table = 'lancamentos_bancarios';
-    protected $fillable = ['conta_bancaria_id','tipo','descricao','valor','data','origem','origem_id','transferencia_grupo','observacoes'];
+    protected $fillable = ['conta_bancaria_id','tipo','descricao','valor','data','origem','origem_id','transferencia_grupo','observacoes','conciliado','conciliado_em','conciliado_por','inter_transacao_id'];
     protected $casts = ['valor' => 'decimal:2', 'data' => 'date'];
     public function contaBancaria(): BelongsTo { return $this->belongsTo(ContaBancaria::class); }
     public static function registrarTransferencia(int $contaOrigemId, int $contaDestinoId, float $valor, string $data, string $descricao = ''): void

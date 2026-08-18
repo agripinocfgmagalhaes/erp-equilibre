@@ -13,11 +13,23 @@ use App\Models\ContaBancaria;
 use Filament\Notifications\Notification;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Schemas\Components\Tabs\Tab;
 class ListLancamentosBancarios extends ListRecords
 {
     use HasResizableColumn;
     protected static string $resource = LancamentoBancarioResource::class;
     protected Width|string|null $maxContentWidth = 'full';
+    public function getTabs(): array
+    {
+        $tabs = [
+            'todas' => Tab::make('Todas'),
+        ];
+        foreach (ContaBancaria::where('ativo', true)->orderBy('nome')->get() as $conta) {
+            $tabs[(string) $conta->id] = Tab::make($conta->nome)
+                ->modifyQueryUsing(fn ($query) => $query->where('conta_bancaria_id', $conta->id));
+        }
+        return $tabs;
+    }
     protected function getHeaderActions(): array
     {
         return [

@@ -76,7 +76,8 @@ class LancamentoBancarioResource extends Resource
                             ->using(function ($query) use ($saldosPorContaEData) {
                                 $first = (clone $query)->first();
                                 if (! $first) return null;
-                                $key = $first->conta_bancaria_id.'|'.$first->data->toDateString();
+                                $dataStr = \Illuminate\Support\Carbon::parse($first->data)->toDateString();
+                                $key = $first->conta_bancaria_id.'|'.$dataStr;
                                 return $saldosPorContaEData[$key] ?? 0;
                             })
                             ->formatStateUsing(fn ($state) => 'R$ '.number_format((float) $state, 2, ',', '.'))
@@ -88,19 +89,17 @@ class LancamentoBancarioResource extends Resource
             ])
             ->defaultGroup('data')
             ->filters([
-                SelectFilter::make('conta_bancaria_id')->label('Conta Bancária')->options(ContaBancaria::pluck('nome', 'id'))->searchable()->default(fn () => ContaBancaria::where('ativo', true)->value('id')),
                 SelectFilter::make('tipo')->options(['entrada' => 'Entrada', 'saida' => 'Saída']),
                 Filter::make('periodo')->schema([
                     DatePicker::make('data_de')->label('De')->displayFormat('d/m/Y'),
                     DatePicker::make('data_ate')->label('Até')->displayFormat('d/m/Y'),
                 ])->query(fn ($query, array $data) => $query->when($data['data_de'], fn ($q, $v) => $q->whereDate('data', '>=', $v))->when($data['data_ate'], fn ($q, $v) => $q->whereDate('data', '<=', $v)))->columns(2),
             ])
-            ->filtersLayout(FiltersLayout::AboveContent)
             ->recordActions([
                 EditAction::make()->slideOver()->iconButton()->visible(fn (LancamentoBancario $record) => $record->origem === 'manual'),
                 DeleteAction::make()->iconButton()->visible(fn (LancamentoBancario $record) => $record->origem === 'manual'),
             ])
-            ->toolbarActions([])->defaultSort('data', 'asc')->dragReorderableColumns()->stickableColumns();
+            ->toolbarActions([])->defaultSort('data', 'desc')->dragReorderableColumns()->stickableColumns();
     }
     public static function getPages(): array
     {
