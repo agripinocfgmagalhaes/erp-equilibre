@@ -129,7 +129,7 @@ class LancamentoBancarioResource extends Resource
                     })
                     ->schema(function (LancamentoBancario $record) {
                         $opcoes = ['arquivar' => 'Arquivar sem vincular (tarifa, IOF, etc.)'];
-                        if ($record->tipo === 'saida') $opcoes = ['vincular_cp' => 'Vincular a Conta a Pagar existente'] + $opcoes;
+                        if ($record->tipo === 'saida') $opcoes = ['vincular_cp' => 'Vincular a Conta a Pagar existente', 'gerar_cp' => 'Gerar nova Conta a Pagar'] + $opcoes;
                         if ($record->tipo === 'entrada') $opcoes = ['vincular_cr' => 'Vincular a Conta a Receber existente', 'gerar_cr' => 'Gerar nova Conta a Receber'] + $opcoes;
                         return [
                             Select::make('destino')->label('O que fazer com esse lançamento?')->options($opcoes)->required()->live()->native(false),
@@ -146,6 +146,8 @@ class LancamentoBancarioResource extends Resource
                                 ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => in_array($get('destino'), ['vincular_cp', 'vincular_cr'])),
                             Select::make('cliente_id')->label('Cliente')->options(fn () => \App\Models\Cliente::orderBy('nome')->pluck('nome', 'id'))->searchable()->native(false)
                                 ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('destino') === 'gerar_cr'),
+                            Select::make('fornecedor_id')->label('Fornecedor')->options(fn () => \App\Models\Fornecedor::orderBy('nome')->pluck('nome', 'id'))->searchable()->native(false)
+                                ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('destino') === 'gerar_cp'),
                         ];
                     })
                     ->action(function (LancamentoBancario $record, array $data) {
@@ -157,6 +159,18 @@ class LancamentoBancarioResource extends Resource
                             $conta = \App\Models\ContaReceber::find($data['titulo_id']);
                             $conta?->update(['status' => 'recebido', 'valor_recebido' => $record->valor, 'data_recebimento' => $record->data]);
                             $record->update(['conciliado' => true, 'conciliado_em' => now(), 'conciliado_por' => auth()->id(), 'origem_id' => $conta?->id]);
+                        } elseif ($data['destino'] === 'gerar_cp') {
+                            $novaConta = \App\Models\ContaPagar::create([
+                                'descricao' => $record->descricao,
+                                'contato_tipo' => $data['fornecedor_id'] ? 'fornecedor' : null,
+                                'contato_id' => $data['fornecedor_id'] ?? null,
+                                'valor' => $record->valor,
+                                'valor_pago' => $record->valor,
+                                'data_vencimento' => $record->data,
+                                'data_pagamento' => $record->data,
+                                'status' => 'pago',
+                            ]);
+                            $record->update(['conciliado' => true, 'conciliado_em' => now(), 'conciliado_por' => auth()->id(), 'origem_id' => $novaConta->id]);
                         } elseif ($data['destino'] === 'gerar_cr') {
                             $novaConta = \App\Models\ContaReceber::create([
                                 'descricao' => $record->descricao,
