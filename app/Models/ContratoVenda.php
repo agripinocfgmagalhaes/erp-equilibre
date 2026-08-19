@@ -15,15 +15,19 @@ class ContratoVenda extends Model
     public function corretor(): BelongsTo { return $this->belongsTo(Corretor::class); }
     public function contasReceber(): HasMany { return $this->hasMany(ContaReceber::class); }
     public function getValorRepasseAttribute(): float { return (float) $this->valor_fgts + (float) $this->valor_financiamento + (float) $this->valor_subsidio; }
-    public static function gerarNumero(): string
+    public static function gerarNumero(?string $identificacaoUnidade = null): string
     {
         $ano = now()->year;
-        return sprintf('CV-%d-%04d', $ano, Sequencia::proximo('CV', $ano));
+        $apto = $identificacaoUnidade ? preg_replace('/[^A-Za-z0-9]/', '', $identificacaoUnidade) : 'SN';
+        return sprintf('CV-%s-%d-%04d', $apto, $ano, Sequencia::proximo('CV', $ano));
     }
     protected static function booted(): void
     {
         static::creating(function (ContratoVenda $c) {
-            if (empty($c->numero)) { $c->numero = static::gerarNumero(); }
+            if (empty($c->numero)) {
+                $identificacao = $c->unidade_id ? Unidade::find($c->unidade_id)?->identificacao : null;
+                $c->numero = static::gerarNumero($identificacao);
+            }
             $c->percentual_comissao = 4.5; $c->valor_comissao = round((float) $c->valor_venda * 4.5 / 100, 2);
         });
         static::updating(function (ContratoVenda $c) { if ($c->isDirty('valor_venda')) { $c->percentual_comissao = 4.5; $c->valor_comissao = round((float) $c->valor_venda * 4.5 / 100, 2); } });
