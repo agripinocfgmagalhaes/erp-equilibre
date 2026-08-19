@@ -113,6 +113,27 @@ class ContratoVendaResource extends Resource
         ->contentGrid(fn () => $livewire->isListLayout() ? null : ['md' => 2, 'lg' => 3])
         ->filters([SelectFilter::make('status')->options(['ativo' => 'Ativo', 'distratado' => 'Distratado', 'cancelado' => 'Cancelado'])])
         ->recordActions([
+            Action::make('alterarVencimentos')->label('Alterar Vencimentos')->icon('heroicon-o-calendar')->color('gray')
+                ->visible(fn (ContratoVenda $record) => \App\Models\ContaReceber::where('contrato_venda_id', $record->id)->where('status', 'aberto')->exists())
+                ->schema(function (ContratoVenda $record) {
+                    return [
+                        Select::make('referencia_id')->label('Parcela de referência')->required()->live()->native(false)
+                            ->options(fn () => \App\Models\ContaReceber::where('contrato_venda_id', $record->id)->where('status', 'aberto')
+                                ->orderBy('data_vencimento')->get()
+                                ->mapWithKeys(fn ($c) => [$c->id => $c->descricao . ' - Venc atual: ' . $c->data_vencimento->format('d/m/Y')])),
+                        DatePicker::make('nova_data')->label('Nova data de vencimento dessa parcela')->required()->native(false)->displayFormat('d/m/Y'),
+                    ];
+                })
+                ->action(function (ContratoVenda $record, array $data) {
+                    $referencia = \App\Models\ContaReceber::find($data['referencia_id']);
+                    if (!$referencia) return;
+                    $delta = $referencia->data_vencimento->diffInDays(\Carbon\Carbon::parse($data['nova_data']), false);
+                    $abertas = \App\Models\ContaReceber::where('contrato_venda_id', $record->id)->where('status', 'aberto')->get();
+                    foreach ($abertas as $conta) {
+                        $conta->update(['data_vencimento' => $conta->data_vencimento->copy()->addDays($delta)]);
+                    }
+                    \Filament\Notifications\Notification::make()->title($abertas->count() . ' parcela(s) atualizada(s)')->success()->send();
+                }),
             Action::make('gerarCR')->label('Gerar CR')->icon('heroicon-o-banknotes')->color('warning')
                 ->visible(fn (ContratoVenda $record) => $record->status === 'ativo' && ! ContaReceber::where('contrato_venda_id', $record->id)->exists())
                 ->fillForm(fn (ContratoVenda $record) => ['sinal_valor' => $record->valor_sinal, 'parcelas_valor_total' => $record->valor_parcelamento, 'parcelas_quantidade' => $record->qtd_parcelas ?: 1, 'repasse_valor' => $record->valor_repasse])
