@@ -146,7 +146,11 @@ class LancamentoBancarioResource extends Resource
                                 ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => in_array($get('destino'), ['vincular_cp', 'vincular_cr'])),
                             Select::make('cliente_id')->label('Cliente')->options(fn () => \App\Models\Cliente::orderBy('nome')->pluck('nome', 'id'))->searchable()->native(false)
                                 ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('destino') === 'gerar_cr'),
-                            Select::make('fornecedor_id')->label('Fornecedor')->options(fn () => \App\Models\Fornecedor::orderBy('nome')->pluck('nome', 'id'))->searchable()->native(false)
+                            Select::make('contato_key')->label('Contato')->options(fn () => \App\Models\Contato::optionsParaSelect())->searchable()->native(false)
+                                ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('destino') === 'gerar_cp'),
+                            Select::make('plano_conta_id')->label('Plano de Conta')->options(fn () => \App\Models\PlanoConta::where('tipo', 'despesa')->where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)
+                                ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('destino') === 'gerar_cp'),
+                            Select::make('projeto_id')->label('Empreendimento')->options(fn () => \App\Models\Projeto::pluck('nome', 'id'))->searchable()->native(false)
                                 ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('destino') === 'gerar_cp'),
                         ];
                     })
@@ -160,10 +164,13 @@ class LancamentoBancarioResource extends Resource
                             $conta?->update(['status' => 'recebido', 'valor_recebido' => $record->valor, 'data_recebimento' => $record->data]);
                             $record->update(['conciliado' => true, 'conciliado_em' => now(), 'conciliado_por' => auth()->id(), 'origem_id' => $conta?->id]);
                         } elseif ($data['destino'] === 'gerar_cp') {
+                            [$contatoTipo, $contatoId] = str_contains($data['contato_key'] ?? '', '|') ? explode('|', $data['contato_key'], 2) : [null, null];
                             $novaConta = \App\Models\ContaPagar::create([
                                 'descricao' => $record->descricao,
-                                'contato_tipo' => $data['fornecedor_id'] ? 'fornecedor' : null,
-                                'contato_id' => $data['fornecedor_id'] ?? null,
+                                'contato_tipo' => $contatoTipo,
+                                'contato_id' => $contatoId,
+                                'plano_conta_id' => $data['plano_conta_id'] ?? null,
+                                'projeto_id' => $data['projeto_id'] ?? null,
                                 'valor' => $record->valor,
                                 'valor_pago' => $record->valor,
                                 'data_vencimento' => $record->data,
