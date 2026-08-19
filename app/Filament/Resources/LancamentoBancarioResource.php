@@ -136,10 +136,10 @@ class LancamentoBancarioResource extends Resource
                             Select::make('titulo_id')->label('Título')->searchable()->native(false)
                                 ->options(function (\Filament\Schemas\Components\Utilities\Get $get) use ($record) {
                                     if ($get('destino') === 'vincular_cp') {
-                                        return \App\Models\ContaPagar::whereNotIn('status', ['pago', 'cancelado'])->get()->mapWithKeys(fn ($c) => [$c->id => "#{$c->id} - {$c->descricao} - R$ " . number_format($c->valor, 2, ',', '.')]);
+                                        return \App\Models\ContaPagar::whereNotIn('status', ['pago', 'cancelado'])->get()->mapWithKeys(fn ($c) => [$c->id => "#{$c->id} - {$c->descricao} - {$c->nome_contato} - Venc: " . $c->data_vencimento->format('d/m/Y') . " - R$ " . number_format($c->valor, 2, ',', '.')]);
                                     }
                                     if ($get('destino') === 'vincular_cr') {
-                                        return \App\Models\ContaReceber::whereNotIn('status', ['recebido', 'cancelado'])->get()->mapWithKeys(fn ($c) => [$c->id => "#{$c->id} - {$c->descricao} - R$ " . number_format($c->valor, 2, ',', '.')]);
+                                        return \App\Models\ContaReceber::whereNotIn('status', ['recebido', 'cancelado'])->with('cliente')->get()->mapWithKeys(fn ($c) => [$c->id => "#{$c->id} - {$c->descricao} - " . ($c->cliente->nome ?? 'sem cliente') . " - Venc: " . $c->data_vencimento->format('d/m/Y') . " - R$ " . number_format($c->valor, 2, ',', '.')]);
                                     }
                                     return [];
                                 })
