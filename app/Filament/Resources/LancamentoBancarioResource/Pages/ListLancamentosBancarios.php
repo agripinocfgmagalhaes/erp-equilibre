@@ -34,6 +34,15 @@ class ListLancamentosBancarios extends ListRecords
     {
         return [
             CreateAction::make()->slideOver()->label('+ Novo Lançamento'),
+            Action::make('atualizarExtrato')->label('Atualizar Extrato')->icon('heroicon-o-arrow-path')->color('gray')
+                ->action(function () {
+                    try {
+                        \Illuminate\Support\Facades\Artisan::call('financeiro:importar-extrato', ['--dias' => 7]);
+                        Notification::make()->title('Extrato atualizado')->body(\Illuminate\Support\Facades\Artisan::output())->success()->send();
+                    } catch (\Throwable $e) {
+                        Notification::make()->title('Falha ao atualizar extrato')->body($e->getMessage())->danger()->send();
+                    }
+                }),
             Action::make('novaTransferencia')->label('Nova Transferência')->icon('heroicon-o-arrows-right-left')->color('gray')->slideOver()
                 ->schema([
                     Select::make('conta_origem_id')->label('Conta de Origem')->options(ContaBancaria::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->required(),
