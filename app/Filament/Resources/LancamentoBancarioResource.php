@@ -132,7 +132,7 @@ class LancamentoBancarioResource extends Resource
                         if ($record->tipo === 'saida') $opcoes = ['vincular_cp' => 'Vincular a Conta a Pagar existente', 'gerar_cp' => 'Gerar nova Conta a Pagar'] + $opcoes;
                         if ($record->tipo === 'entrada') $opcoes = ['vincular_cr' => 'Vincular a Conta a Receber existente', 'gerar_cr' => 'Gerar nova Conta a Receber'] + $opcoes;
                         return [
-                            Select::make('destino')->label('O que fazer com esse lançamento?')->options($opcoes)->required()->live()->native(false),
+                            \Filament\Forms\Components\Radio::make('destino')->label('O que fazer com esse lançamento?')->options($opcoes)->required()->live()->inline()->inlineLabel(false),
                             Select::make('titulo_id')->label('Título')->searchable()->native(false)
                                 ->options(function (\Filament\Schemas\Components\Utilities\Get $get) use ($record) {
                                     if ($get('destino') === 'vincular_cp') {
