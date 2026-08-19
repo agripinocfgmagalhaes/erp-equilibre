@@ -21,6 +21,7 @@ class ContaReceber extends Model
     {
         static::saving(function (ContaReceber $conta) {
             if ($conta->status === 'aberto' && $conta->data_vencimento && $conta->data_vencimento->isPast()) $conta->status = 'vencido';
+            if ($conta->status === 'vencido' && $conta->data_vencimento && ! $conta->data_vencimento->isPast()) $conta->status = 'aberto';
         });
     }
 }
