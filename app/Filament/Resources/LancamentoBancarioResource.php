@@ -128,7 +128,7 @@ class LancamentoBancarioResource extends Resource
                         ];
                     })
                     ->schema(function (LancamentoBancario $record) {
-                        $opcoes = ['arquivar' => 'Arquivar sem vincular (tarifa, IOF, etc.)'];
+                        $opcoes = [];
                         if ($record->tipo === 'saida') $opcoes = ['vincular_cp' => 'Vincular a Conta a Pagar existente', 'gerar_cp' => 'Gerar nova Conta a Pagar'] + $opcoes;
                         if ($record->tipo === 'entrada') $opcoes = ['vincular_cr' => 'Vincular a Conta a Receber existente', 'gerar_cr' => 'Gerar nova Conta a Receber'] + $opcoes;
                         return [
@@ -192,8 +192,6 @@ class LancamentoBancarioResource extends Resource
                                 'status' => 'recebido',
                             ]);
                             $record->update(['conciliado' => true, 'conciliado_em' => now(), 'conciliado_por' => auth()->id(), 'origem_id' => $novaConta->id]);
-                        } else {
-                            $record->update(['conciliado' => true, 'conciliado_em' => now(), 'conciliado_por' => auth()->id()]);
                         }
                         Notification::make()->title('Lançamento conciliado')->success()->send();
                     }),
