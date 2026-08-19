@@ -152,6 +152,8 @@ class LancamentoBancarioResource extends Resource
                                 ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('destino') === 'gerar_cp'),
                             Select::make('projeto_id')->label('Empreendimento')->options(fn () => \App\Models\Projeto::pluck('nome', 'id'))->searchable()->native(false)
                                 ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('destino') === 'gerar_cp'),
+                            Select::make('fase_padrao_id')->label('Fase')->options(fn () => \App\Models\FasePadrao::orderBy('ordem')->pluck('nome', 'id'))->searchable()->native(false)
+                                ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('destino') === 'gerar_cp'),
                         ];
                     })
                     ->action(function (LancamentoBancario $record, array $data) {
@@ -171,6 +173,7 @@ class LancamentoBancarioResource extends Resource
                                 'contato_id' => $contatoId,
                                 'plano_conta_id' => $data['plano_conta_id'] ?? null,
                                 'projeto_id' => $data['projeto_id'] ?? null,
+                                'fase_padrao_id' => $data['fase_padrao_id'] ?? null,
                                 'valor' => $record->valor,
                                 'valor_pago' => $record->valor,
                                 'data_vencimento' => $record->data,
