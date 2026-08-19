@@ -87,9 +87,11 @@ class LancamentoBancarioResource extends Resource
             ])
             ->groups([
                 Group::make('data')->label('Data')
-                    ->getTitleFromRecordUsing(fn ($record) => $record->data->format('d/m/Y')),
+                    ->getTitleFromRecordUsing(fn ($record) => $record->data->format('d/m/Y'))
+                    ->orderQueryUsing(fn ($query) => $query->orderBy('data', 'desc')),
             ])
             ->defaultGroup('data')
+            ->groupingDirectionSettingHidden()
             ->filters([
                 Filter::make('pendentes')->label('Somente pendentes de conciliação')
                     ->query(fn ($query) => $query->where('origem', 'extrato_inter')->where('conciliado', false)),
@@ -102,6 +104,29 @@ class LancamentoBancarioResource extends Resource
             ->recordActions([
                 Action::make('conciliar')->label('Conciliar')->icon('heroicon-o-link')->color('warning')
                     ->visible(fn (LancamentoBancario $record) => $record->origem === 'extrato_inter' && ! $record->conciliado)
+                    ->fillForm(function (LancamentoBancario $record) {
+                        $candidato = null;
+                        $destino = null;
+                        if ($record->tipo === 'saida') {
+                            $candidato = \App\Models\ContaPagar::whereNotIn('status', ['pago', 'cancelado'])
+                                ->where('valor', $record->valor)
+                                ->whereBetween('data_vencimento', [$record->data->copy()->subDays(5), $record->data->copy()->addDays(5)])
+                                ->orderByRaw('ABS(DATEDIFF(data_vencimento, ?))', [$record->data])
+                                ->first();
+                            if ($candidato) $destino = 'vincular_cp';
+                        } elseif ($record->tipo === 'entrada') {
+                            $candidato = \App\Models\ContaReceber::whereNotIn('status', ['recebido', 'cancelado'])
+                                ->where('valor', $record->valor)
+                                ->whereBetween('data_vencimento', [$record->data->copy()->subDays(5), $record->data->copy()->addDays(5)])
+                                ->orderByRaw('ABS(DATEDIFF(data_vencimento, ?))', [$record->data])
+                                ->first();
+                            if ($candidato) $destino = 'vincular_cr';
+                        }
+                        return [
+                            'destino' => $destino,
+                            'titulo_id' => $candidato?->id,
+                        ];
+                    })
                     ->schema(function (LancamentoBancario $record) {
                         $opcoes = ['arquivar' => 'Arquivar sem vincular (tarifa, IOF, etc.)'];
                         if ($record->tipo === 'saida') $opcoes = ['vincular_cp' => 'Vincular a Conta a Pagar existente'] + $opcoes;
