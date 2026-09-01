@@ -120,6 +120,35 @@ class InterBoletoService
         return $data;
     }
 
+    public function listar(string $dataInicial, string $dataFinal, ?string $situacao = null): array
+    {
+        $cobrancas = [];
+        $pagina = 0;
+
+        do {
+            $query = array_filter([
+                'dataInicial' => $dataInicial,
+                'dataFinal' => $dataFinal,
+                'filtrarDataPor' => 'VENCIMENTO',
+                'situacao' => $situacao,
+                'itensPorPagina' => 100,
+                'paginaAtual' => $pagina,
+            ]);
+
+            $res = $this->http()->withToken($this->token())
+                ->get("{$this->baseUrl}/cobranca/v3/cobrancas", $query);
+
+            if ($res->failed()) throw new Exception('Falha ao listar cobrancas: ' . $res->body());
+
+            $data = $res->json();
+            $cobrancas = array_merge($cobrancas, $data['cobrancas'] ?? []);
+            $totalPaginas = $data['totalPaginas'] ?? 1;
+            $pagina++;
+        } while ($pagina < $totalPaginas);
+
+        return $cobrancas;
+    }
+
     public function pdfBase64(ContaReceber $conta): string
     {
         $res = $this->http()->withToken($this->token())

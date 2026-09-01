@@ -87,6 +87,21 @@ class ContaReceberResource extends Resource
                     ->when($data['de'] ?? null, fn ($q, $date) => $q->whereDate('data_vencimento', '>=', $date))
                     ->when($data['ate'] ?? null, fn ($q, $date) => $q->whereDate('data_vencimento', '<=', $date))
                 ),
+            Filter::make('inter_emitido_em')
+                ->form([
+                    DatePicker::make('de')->label('Boleto emitido de'),
+                    DatePicker::make('ate')->label('Boleto emitido até'),
+                ])
+                ->query(fn (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder => $query
+                    ->when($data['de'] ?? null, fn ($q, $date) => $q->whereDate('inter_emitido_em', '>=', $date))
+                    ->when($data['ate'] ?? null, fn ($q, $date) => $q->whereDate('inter_emitido_em', '<=', $date))
+                ),
+            SelectFilter::make('tem_boleto')->label('Boleto')
+                ->options(['sim' => 'Com boleto emitido', 'nao' => 'Sem boleto'])
+                ->query(fn (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder => $query
+                    ->when(($data['value'] ?? null) === 'sim', fn ($q) => $q->whereNotNull('inter_codigo_solicitacao'))
+                    ->when(($data['value'] ?? null) === 'nao', fn ($q) => $q->whereNull('inter_codigo_solicitacao'))
+                ),
         ])
         ->filtersFormColumns(2)
         ->recordActions([
