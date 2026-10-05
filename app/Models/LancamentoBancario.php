@@ -8,6 +8,16 @@ class LancamentoBancario extends Model
     protected $fillable = ['conta_bancaria_id','tipo','descricao','valor','data','origem','origem_id','transferencia_grupo','observacoes','conciliado','conciliado_em','conciliado_por','inter_transacao_id'];
     protected $casts = ['valor' => 'decimal:2', 'data' => 'date'];
     public function contaBancaria(): BelongsTo { return $this->belongsTo(ContaBancaria::class); }
+    public function getContatoAttribute(): string
+    {
+        if ($this->origem === 'conta_receber' || ($this->origem === 'extrato_inter' && $this->conciliado && $this->tipo === 'entrada' && $this->origem_id)) {
+            return ContaReceber::find($this->origem_id)?->cliente?->nome ?? '—';
+        }
+        if ($this->origem === 'conta_pagar' || ($this->origem === 'extrato_inter' && $this->conciliado && $this->tipo === 'saida' && $this->origem_id)) {
+            return ContaPagar::find($this->origem_id)?->nome_contato ?? '—';
+        }
+        return '—';
+    }
     public static function registrarTransferencia(int $contaOrigemId, int $contaDestinoId, float $valor, string $data, string $descricao = ''): void
     {
         $grupo = (string) \Illuminate\Support\Str::uuid();

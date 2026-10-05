@@ -74,8 +74,22 @@ class ContratoVendaResource extends Resource
                         if ($state) { $u = Unidade::find($state); if ($u) { $set('valor_venda', $u->valor_tabela); $set('valor_comissao', round($u->valor_tabela * 4.5 / 100, 2)); static::recalcParcelamento($set, $get); } }
                     }),
                 Hidden::make('projeto_id'),
-                Select::make('cliente_id')->label('Cliente')->options(Cliente::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->required(),
-                Select::make('corretor_id')->label('Corretor')->options(Corretor::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->nullable(),
+                Select::make('cliente_id')->label('Cliente')->options(Cliente::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->required()->preload()
+                    ->createOptionForm([
+                        TextInput::make('nome')->label('Nome')->required()->maxLength(150)->columnSpanFull(),
+                        TextInput::make('cpf')->label('CPF')->maxLength(14),
+                        TextInput::make('email')->label('E-mail')->email()->maxLength(100),
+                        TextInput::make('telefone')->label('Telefone')->maxLength(20),
+                    ])->columns(2)
+                    ->createOptionUsing(fn (array $data) => Cliente::create($data + ['ativo' => true])->id),
+                Select::make('corretor_id')->label('Corretor')->options(Corretor::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->nullable()->preload()
+                    ->createOptionForm([
+                        TextInput::make('nome')->label('Nome')->required()->maxLength(150)->columnSpanFull(),
+                        TextInput::make('cpf_cnpj')->label('CPF/CNPJ')->maxLength(18),
+                        TextInput::make('creci')->label('CRECI')->maxLength(20),
+                        TextInput::make('telefone')->label('Telefone')->maxLength(20),
+                    ])->columns(2)
+                    ->createOptionUsing(fn (array $data) => Corretor::create($data + ['ativo' => true])->id),
             ])->columns(2)->columnSpanFull(),
             Section::make('Composição do Valor')->schema([
                 TextInput::make('valor_venda')->label('Valor Total de Venda')->numeric()->prefix('R$')->step(0.01)->required()->live(onBlur: true)
@@ -96,6 +110,7 @@ class ContratoVendaResource extends Resource
                         DatePicker::make('data_vencimento')->label('Vencimento')->displayFormat('d/m/Y')->columnSpan(1)->required(),
                     ])->columns(4)->collapsible()->defaultItems(0)->orderColumn('ordem')->live()->afterStateUpdated(fn (callable $set, callable $get) => static::recalcParcelamento($set, $get))->columnSpanFull(),
 
+                DatePicker::make('data_primeira_parcela')->label('Vencimento da 1ª Parcela')->displayFormat('d/m/Y')->default(now()->addMonth()),
                 TextInput::make('valor_parcelamento')->label('Valor Total do Parcelamento')->numeric()->prefix('R$')->step(0.01)->default(0)->readOnly(),
                 TextInput::make('qtd_parcelas')->label('Nº de Parcelas')->numeric()->default(0)->minValue(0)->live(onBlur: true)->afterStateUpdated(fn (callable $set, callable $get) => static::recalcParcelamento($set, $get)),
                 TextInput::make('taxa_juros')->label('Taxa de Juros (% a.m.)')->numeric()->suffix('% a.m.')->step(0.001)->default(1.200)->live(onBlur: true)->afterStateUpdated(fn (callable $set, callable $get) => static::recalcParcelamento($set, $get)),
@@ -136,7 +151,7 @@ class ContratoVendaResource extends Resource
                 }),
             Action::make('gerarCR')->label('Gerar CR')->icon('heroicon-o-banknotes')->color('warning')
                 ->visible(fn (ContratoVenda $record) => $record->status === 'ativo' && ! ContaReceber::where('contrato_venda_id', $record->id)->exists())
-                ->fillForm(fn (ContratoVenda $record) => ['sinal_valor' => $record->valor_sinal, 'parcelas_valor_total' => $record->valor_parcelamento, 'parcelas_quantidade' => $record->qtd_parcelas ?: 1, 'repasse_valor' => $record->valor_repasse])
+                ->fillForm(fn (ContratoVenda $record) => ['sinal_valor' => $record->valor_sinal, 'parcelas_valor_total' => $record->valor_parcelamento, 'parcelas_quantidade' => $record->qtd_parcelas ?: 1, 'parcelas_primeiro_venc' => $record->data_primeira_parcela ?? now()->addMonth(), 'repasse_valor' => $record->valor_repasse])
                 ->schema([
                     Section::make('Sinal')->schema([
                         TextInput::make('sinal_valor')->label('Valor do Sinal')->numeric()->prefix('R$')->step(0.01)->default(0),

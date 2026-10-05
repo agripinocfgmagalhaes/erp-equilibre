@@ -28,8 +28,8 @@ class DashboardStatsWidget extends BaseWidget
         $comprasAberto = PedidoCompra::whereIn('status', ['rascunho', 'aprovado'])->sum('valor_total');
         $contasAtivas = ContaBancaria::where('ativo', true)->pluck('id');
         $saldoBancario = ContaBancaria::where('ativo', true)->sum('saldo_inicial')
-            + LancamentoBancario::whereIn('conta_bancaria_id', $contasAtivas)->where('tipo', 'entrada')->sum('valor')
-            - LancamentoBancario::whereIn('conta_bancaria_id', $contasAtivas)->where('tipo', 'saida')->sum('valor');
+            + LancamentoBancario::whereIn('conta_bancaria_id', $contasAtivas)->whereIn('origem', ['extrato_inter', 'manual', 'transferencia'])->where('tipo', 'entrada')->sum('valor')
+            - LancamentoBancario::whereIn('conta_bancaria_id', $contasAtivas)->whereIn('origem', ['extrato_inter', 'manual', 'transferencia'])->where('tipo', 'saida')->sum('valor');
         return [
             Stat::make('CP Vencidas', 'R$ '.number_format($cpVencidas, 2, ',', '.'))->description('Em aberto: R$ '.number_format($cpAberto, 2, ',', '.'))->color($cpVencidas > 0 ? 'danger' : 'success')->icon('heroicon-o-arrow-up-circle'),
             Stat::make('CR a Receber', 'R$ '.number_format($crAberto, 2, ',', '.'))->description('Vencidas: R$ '.number_format($crVencidas, 2, ',', '.'))->color($crVencidas > 0 ? 'warning' : 'success')->icon('heroicon-o-arrow-down-circle'),

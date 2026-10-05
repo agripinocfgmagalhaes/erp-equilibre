@@ -105,16 +105,7 @@ class ContaReceberResource extends Resource
         ])
         ->filtersFormColumns(2)
         ->recordActions([
-            Action::make('darBaixa')->label('Dar Baixa')->icon('heroicon-o-check-circle')->color('success')->iconButton()
-                ->visible(fn (ContaReceber $record) => ! in_array($record->status, ['recebido', 'cancelado']))
-                ->schema([
-                    TextInput::make('valor_recebido')->label('Valor Recebido')->numeric()->prefix('R$')->step(0.01)->required(),
-                    DatePicker::make('data_recebimento')->label('Data do Recebimento')->displayFormat('d/m/Y')->default(now())->required(),
-                    Select::make('conta_bancaria_id')->label('Conta Bancária')->options(ContaBancaria::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->required(),
-                ])
-                ->fillForm(fn (ContaReceber $record) => ['valor_recebido' => $record->valor])
-                ->action(fn (ContaReceber $record, array $data) => $record->darBaixa((float) $data['valor_recebido'], $data['data_recebimento'], $data['conta_bancaria_id'] ?? null)),
-            Action::make('emitirBoleto')->label('Emitir Boleto Inter')->icon('heroicon-o-document-currency-dollar')->color('info')->iconButton()
+Action::make('emitirBoleto')->label('Emitir Boleto Inter')->icon('heroicon-o-document-currency-dollar')->color('info')->iconButton()
                 ->visible(fn (ContaReceber $record) => !$record->inter_codigo_solicitacao && $record->status !== 'recebido')
                 ->action(function (ContaReceber $record) {
                     try {
@@ -129,11 +120,181 @@ class ContaReceberResource extends Resource
                 ->modalContent(fn (ContaReceber $record) => view('boleto-info', ['conta' => $record]))
                 ->modalSubmitAction(false)
                 ->modalCancelAction(false),
-
-            EditAction::make()->slideOver()->modalWidth('4xl')->iconButton(),
-            DeleteAction::make()->iconButton(),
+            \Filament\Actions\ActionGroup::make([
+            Action::make('darBaixa')->label('Dar Baixa')->icon('heroicon-o-check-circle')->color('success')
+                ->visible(fn (ContaReceber $record) => ! in_array($record->status, ['recebido', 'cancelado']))
+                ->schema(fn (ContaReceber $record) => [
+                    TextInput::make('valor_recebido')->label('Valor Recebido')->numeric()->prefix('R$')->step(0.01)->minValue(0.01)->required()->live(onBlur: true)
+                        ->helperText('Acima do saldo, a diferença é registrada como juros/multa.'),
+                    \Filament\Forms\Components\Placeholder::make('info_baixa')->label('')
+                        ->content(function (\Filament\Schemas\Components\Utilities\Get $get) use ($record) {
+                            $saldo = round((float) $record->valor - (float) $record->valor_recebido, 2);
+                            $dif = round((float) $get('valor_recebido') - $saldo, 2);
+                            $f = fn ($n) => 'R$ ' . number_format($n, 2, ',', '.');
+                            if ($dif > 0.01) return 'Saldo ' . $f($saldo) . ' + ' . $f($dif) . ' de juros/multa';
+                            if ($dif < -0.01) return 'Baixa parcial: restará ' . $f(-$dif) . ' em aberto';
+                            return 'Quitação exata do saldo de ' . $f($saldo);
+                        }),
+                    DatePicker::make('data_recebimento')->label('Data do Recebimento')->displayFormat('d/m/Y')->default(now())->required(),
+                    Select::make('conta_bancaria_id')->label('Conta Bancária')->options(ContaBancaria::where('ativo', true)->pluck('nome', 'id'))->searchable()->native(false)->required(),
+                ])
+                ->fillForm(fn (ContaReceber $record) => ['valor_recebido' => round((float) $record->valor - (float) $record->valor_recebido, 2)])
+                ->action(function (ContaReceber $record, array $data) {
+                    try {
+                        $r = app(\App\Services\Financeiro\ContaReceberService::class)->darBaixa($record, (float) $data['valor_recebido'], $data['data_recebimento'], $data['conta_bancaria_id'] ?? null, true);
+                        $j = max(0, round((float) $r->valor_recebido - (float) $r->valor, 2));
+                        Notification::make()->title('Baixa realizada')->body($j > 0 ? 'Juros/multa: R$ ' . number_format($j, 2, ',', '.') : null)->success()->send();
+                    } catch (\Throwable $e) {
+                        report($e);
+                        Notification::make()->title('Falha ao dar baixa')->body($e->getMessage())->danger()->send();
+                    }
+                }),
+            Action::make('reemitirBoleto')->label('Cancelar e Reemitir Boleto')->icon('heroicon-o-arrow-path')->color('warning')
+                ->visible(fn (ContaReceber $record) => $record->inter_codigo_solicitacao && ! in_array($record->status, ['recebido', 'cancelado']))
+                ->modalDescription('O boleto atual será cancelado no Inter e um novo será emitido com os dados abaixo.')
+                ->schema([
+                    TextInput::make('valor')->label('Novo valor')->numeric()->prefix('R$')->step(0.01)->minValue(0.01)->required(),
+                    DatePicker::make('data_vencimento')->label('Novo vencimento')->displayFormat('d/m/Y')->required(),
+                ])
+                ->fillForm(fn (ContaReceber $record) => ['valor' => $record->valor, 'data_vencimento' => $record->data_vencimento])
+                ->action(function (ContaReceber $record, array $data) {
+                    try {
+                        app(\App\Services\InterBoletoService::class)->reemitir($record, ['valor' => $data['valor'], 'data_vencimento' => $data['data_vencimento']]);
+                        Notification::make()->title('Boleto cancelado e reemitido')->success()->send();
+                    } catch (\Throwable $e) {
+                        Notification::make()->title('Falha ao reemitir boleto')->body($e->getMessage())->danger()->send();
+                    }
+                }),
+            Action::make('cancelarBoleto')->label('Cancelar Boleto')->icon('heroicon-o-x-circle')->color('danger')
+                ->visible(fn (ContaReceber $record) => $record->inter_codigo_solicitacao && ! in_array($record->status, ['recebido', 'cancelado']))
+                ->modalHeading('Cancelar boleto no Inter')
+                ->modalDescription('O boleto será cancelado no Inter e o título ficará sem boleto, podendo emitir um novo depois.')
+                ->schema([
+                    Select::make('motivo')->label('Motivo')->options(['ACERTOS' => 'Acertos', 'APEDIDODOCLIENTE' => 'A pedido do cliente', 'PAGODIRETOAOCREDOR' => 'Pago direto ao credor', 'SUBSTITUICAO' => 'Substituição'])->default('ACERTOS')->native(false)->required(),
+                ])
+                ->action(function (ContaReceber $record, array $data) {
+                    try {
+                        app(\App\Services\InterBoletoService::class)->cancelarBoleto($record, $data['motivo']);
+                        Notification::make()->title('Boleto cancelado')->success()->send();
+                    } catch (\Throwable $e) {
+                        report($e);
+                        Notification::make()->title('Falha ao cancelar boleto')->body($e->getMessage())->danger()->send();
+                    }
+                }),
+            EditAction::make()->slideOver()->modalWidth('4xl'),
+            DeleteAction::make(),
+        ])->icon('heroicon-m-ellipsis-vertical')->tooltip('Ações')
         ])
-        ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])])
+        ->toolbarActions([BulkActionGroup::make([
+            \Filament\Actions\BulkAction::make('alterarValorLote')->label('Alterar Valor em Lote')->icon('heroicon-o-currency-dollar')->color('warning')
+                ->schema([
+                    Select::make('modo')->label('Modo')->options(['fixo' => 'Definir valor fixo', 'percentual' => 'Ajuste percentual (%)', 'soma' => 'Somar/subtrair valor (R$)'])->default('fixo')->native(false)->required(),
+                    TextInput::make('valor')->label('Valor / %')->numeric()->step(0.01)->required()->helperText('Para reduzir use número negativo (modos % e R$).'),
+                    Toggle::make('reemitir')->label('Cancelar e reemitir boletos já emitidos')->default(false),
+                ])
+                ->modalDescription('Títulos recebidos ou cancelados são ignorados. Com boleto emitido: só se a opção de reemitir estiver ligada.')
+                ->deselectRecordsAfterCompletion()
+                ->action(function ($records, array $data) {
+                    $v = (float) $data['valor'];
+                    $ok = 0; $ign = 0; $falha = 0;
+                    foreach ($records as $r) {
+                        if (in_array($r->status, ['recebido', 'cancelado']) || ($r->inter_codigo_solicitacao && ! ($data['reemitir'] ?? false))) { $ign++; continue; }
+                        $novo = round(match ($data['modo']) {
+                            'percentual' => (float) $r->valor * (1 + $v / 100),
+                            'soma' => (float) $r->valor + $v,
+                            default => $v,
+                        }, 2);
+                        if ($novo <= 0) { $ign++; continue; }
+                        if ($r->inter_codigo_solicitacao) {
+                            try { app(\App\Services\InterBoletoService::class)->reemitir($r, ['valor' => $novo]); }
+                            catch (\Throwable $e) { $falha++; continue; }
+                        } else {
+                            $r->update(['valor' => $novo]);
+                        }
+                        $ok++;
+                    }
+                    Notification::make()->title($ok . ' atualizado(s), ' . $ign . ' ignorado(s)' . ($falha ? ', ' . $falha . ' falha(s) ao reemitir (conferir no Inter)' : ''))->success()->send();
+                }),
+            \Filament\Actions\BulkAction::make('alterarDiaLote')->label('Alterar Dia do Vencimento')->icon('heroicon-o-calendar-days')->color('warning')
+                ->schema([
+                    TextInput::make('dia')->label('Novo dia')->numeric()->minValue(1)->maxValue(31)->required()->helperText('Mês e ano são mantidos. Em meses mais curtos usa o último dia.'),
+                    Toggle::make('reemitir')->label('Cancelar e reemitir boletos já emitidos')->default(false),
+                ])
+                ->modalDescription('Títulos recebidos ou cancelados são ignorados. Com boleto emitido: só se a opção de reemitir estiver ligada.')
+                ->deselectRecordsAfterCompletion()
+                ->action(function ($records, array $data) {
+                    $ok = 0; $ign = 0; $falha = 0;
+                    foreach ($records as $r) {
+                        if (in_array($r->status, ['recebido', 'cancelado']) || ($r->inter_codigo_solicitacao && ! ($data['reemitir'] ?? false))) { $ign++; continue; }
+                        $dv = \Carbon\Carbon::parse($r->data_vencimento);
+                        $novo = $dv->copy()->day(min((int) $data['dia'], $dv->daysInMonth))->toDateString();
+                        if ($novo === $dv->toDateString()) { $ign++; continue; }
+                        if ($r->inter_codigo_solicitacao) {
+                            try { app(\App\Services\InterBoletoService::class)->reemitir($r, ['data_vencimento' => $novo]); }
+                            catch (\Throwable $e) { $falha++; continue; }
+                        } else {
+                            $r->update(['data_vencimento' => $novo]);
+                        }
+                        $ok++;
+                    }
+                    Notification::make()->title($ok . ' atualizado(s), ' . $ign . ' ignorado(s)' . ($falha ? ', ' . $falha . ' falha(s) ao reemitir (conferir no Inter)' : ''))->success()->send();
+                }),
+            \Filament\Actions\BulkAction::make('emitirBoletosLote')->label('Emitir Boletos Inter')->icon('heroicon-o-document-currency-dollar')->color('info')
+                ->requiresConfirmation()
+                ->modalDescription('Emite boleto para os títulos selecionados que ainda não têm boleto. Recebidos, cancelados, já emitidos e clientes sem CPF/CNPJ são ignorados.')
+                ->deselectRecordsAfterCompletion()
+                ->action(function ($records) {
+                    set_time_limit(300);
+                    $svc = app(\App\Services\InterBoletoService::class);
+                    $ok = 0; $ign = 0; $erros = [];
+                    foreach ($records as $r) {
+                        if (in_array($r->status, ['recebido', 'cancelado']) || $r->inter_codigo_solicitacao || empty($r->cliente?->cpf)) { $ign++; continue; }
+                        try { $svc->emitir($r); $ok++; usleep(300000); }
+                        catch (\Throwable $e) { $erros[] = '#' . $r->id . ': ' . mb_substr($e->getMessage(), 0, 120); }
+                    }
+                    $n = Notification::make()->title($ok . ' emitido(s), ' . $ign . ' ignorado(s)' . ($erros ? ', ' . count($erros) . ' erro(s)' : ''));
+                    if ($erros) { $n->body(implode("\n", array_slice($erros, 0, 5)))->warning(); } else { $n->success(); }
+                    $n->send();
+                }),
+            \Filament\Actions\BulkAction::make('alterarMesLote')->label('Alterar Mês do Vencimento')->icon('heroicon-o-calendar')->color('warning')
+                ->schema([
+                    Select::make('modo')->label('Modo')->options(['deslocar' => 'Deslocar meses (+/-)', 'definir' => 'Definir mês'])->default('deslocar')->native(false)->live()->required(),
+                    TextInput::make('meses')->label('Quantidade de meses')->numeric()->integer()->step(1)->minValue(-60)->maxValue(60)
+                        ->helperText('Positivo adia, negativo antecipa. Ex.: 1 = próximo mês; -1 = mês anterior.')
+                        ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('modo') === 'deslocar')
+                        ->required(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('modo') === 'deslocar'),
+                    Select::make('mes')->label('Novo mês')->native(false)
+                        ->options([1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril', 5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto', 9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro'])
+                        ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('modo') === 'definir')
+                        ->required(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('modo') === 'definir'),
+                    Toggle::make('reemitir')->label('Cancelar e reemitir boletos já emitidos')->default(false),
+                ])
+                ->modalDescription('Dia e ano são mantidos (no modo "definir mês"). Em meses mais curtos usa o último dia. Títulos recebidos ou cancelados são ignorados; com boleto emitido, só se a opção de reemitir estiver ligada.')
+                ->deselectRecordsAfterCompletion()
+                ->action(function ($records, array $data) {
+                    $ok = 0; $ign = 0; $falha = 0;
+                    foreach ($records as $r) {
+                        if (in_array($r->status, ['recebido', 'cancelado']) || ($r->inter_codigo_solicitacao && ! ($data['reemitir'] ?? false))) { $ign++; continue; }
+                        $dv = \Carbon\Carbon::parse($r->data_vencimento);
+                        if (($data['modo'] ?? 'deslocar') === 'deslocar') {
+                            $novo = $dv->copy()->addMonthsNoOverflow((int) $data['meses'])->toDateString();
+                        } else {
+                            $base = \Carbon\Carbon::create($dv->year, (int) $data['mes'], 1);
+                            $novo = $base->copy()->day(min($dv->day, $base->daysInMonth))->toDateString();
+                        }
+                        if ($novo === $dv->toDateString()) { $ign++; continue; }
+                        if ($r->inter_codigo_solicitacao) {
+                            try { app(\App\Services\InterBoletoService::class)->reemitir($r, ['data_vencimento' => $novo]); }
+                            catch (\Throwable $e) { $falha++; continue; }
+                        } else {
+                            $r->update(['data_vencimento' => $novo]);
+                        }
+                        $ok++;
+                    }
+                    Notification::make()->title($ok . ' atualizado(s), ' . $ign . ' ignorado(s)' . ($falha ? ', ' . $falha . ' falha(s) ao reemitir (conferir no Inter)' : ''))->success()->send();
+                }),
+            DeleteBulkAction::make(),
+        ])])
         ->defaultSort('data_vencimento')->dragReorderableColumns()->stickableColumns();
     }
     protected static function getListTableColumns(): array

@@ -40,10 +40,6 @@ class ContaPagarService
                 'status' => $valorPago >= (float) $conta->valor ? 'pago' : 'aberto',
             ]);
 
-            if ($contaBancariaId) {
-                LancamentoBancario::registrarBaixa('conta_pagar', $conta->id, $contaBancariaId, 'saida', $conta->descricao, $valorPago, $dataPagamento);
-            }
-
             if ($valorPago >= (float) $conta->valor && $conta->medicao) {
                 $conta->medicao->update(['status' => 'paga']);
             }

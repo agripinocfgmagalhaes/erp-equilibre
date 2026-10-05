@@ -171,6 +171,10 @@ class ContaPagarResource extends Resource
             TextColumn::make('status')->sortable()->label('Status')->badge()
                 ->colors(['gray' => 'aberto', 'success' => 'pago', 'danger' => 'vencido', 'secondary' => 'cancelado'])
                 ->formatStateUsing(fn ($state) => ['aberto' => 'Aberto', 'pago' => 'Pago', 'vencido' => 'Vencido', 'cancelado' => 'Cancelado'][$state] ?? $state),
+            \Filament\Tables\Columns\IconColumn::make('conciliado_bancariamente')->label('Banco')->boolean()
+                ->trueIcon('heroicon-o-check-badge')->falseIcon('heroicon-o-minus')
+                ->trueColor('success')->falseColor('gray')
+                ->tooltip(fn ($state) => $state ? 'Confirmado no extrato bancário' : 'Ainda não confirmado no extrato'),
         ];
     }
     protected static function getGridTableColumns(): array

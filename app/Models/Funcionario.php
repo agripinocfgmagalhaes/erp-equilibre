@@ -10,6 +10,8 @@ class Funcionario extends Model
     protected $casts = ['data_entrada' => 'date', 'data_saida' => 'date'];
     public function projeto(): BelongsTo { return $this->belongsTo(Projeto::class); }
     public function diarias(): HasMany { return $this->hasMany(FuncionarioDiaria::class); }
+    public function presencas(): HasMany { return $this->hasMany(FuncionarioPresenca::class); }
+    public function fechamentos(): HasMany { return $this->hasMany(FolhaFechamento::class); }
     public function diariaAtual(): ?FuncionarioDiaria
     {
         return $this->diarias()->whereNull('vigente_ate')->latest('vigente_desde')->first()

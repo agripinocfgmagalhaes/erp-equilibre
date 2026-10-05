@@ -1,6 +1,7 @@
 <?php
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 class Cliente extends Model
 {
     protected $fillable = [
@@ -23,6 +24,8 @@ class Cliente extends Model
         'viuvo' => 'Viúvo(a)',
         'uniao_estavel' => 'União Estável',
     ];
+
+    public function contasReceber(): HasMany { return $this->hasMany(\App\Models\ContaReceber::class); }
 
     public function temConjuge(): bool
     {

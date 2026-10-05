@@ -8,8 +8,8 @@ use App\Services\InterBoletoService;
 class ContratoVenda extends Model
 {
     protected $table = 'contratos_venda';
-    protected $fillable = ['numero','unidade_id','cliente_id','corretor_id','status','valor_venda','valor_entrada','valor_sinal','valor_parcelamento','valor_fgts','valor_financiamento','valor_subsidio','qtd_parcelas','taxa_juros','valor_parcela','percentual_comissao','valor_comissao','data_contrato','data_entrega_prevista','observacoes'];
-    protected $casts = ['valor_venda' => 'decimal:2', 'valor_entrada' => 'decimal:2', 'valor_sinal' => 'decimal:2', 'valor_parcelamento' => 'decimal:2', 'valor_fgts' => 'decimal:2', 'valor_financiamento' => 'decimal:2', 'valor_subsidio' => 'decimal:2', 'taxa_juros' => 'decimal:3', 'valor_parcela' => 'decimal:2', 'percentual_comissao' => 'decimal:2', 'valor_comissao' => 'decimal:2', 'data_contrato' => 'date', 'data_entrega_prevista' => 'date'];
+    protected $fillable = ['numero','unidade_id','cliente_id','corretor_id','status','valor_venda','valor_entrada','valor_sinal','valor_parcelamento','valor_fgts','valor_financiamento','valor_subsidio','qtd_parcelas','taxa_juros','valor_parcela','percentual_comissao','valor_comissao','data_contrato','data_primeira_parcela','data_entrega_prevista','observacoes'];
+    protected $casts = ['valor_venda' => 'decimal:2', 'valor_entrada' => 'decimal:2', 'valor_sinal' => 'decimal:2', 'valor_parcelamento' => 'decimal:2', 'valor_fgts' => 'decimal:2', 'valor_financiamento' => 'decimal:2', 'valor_subsidio' => 'decimal:2', 'taxa_juros' => 'decimal:3', 'valor_parcela' => 'decimal:2', 'percentual_comissao' => 'decimal:2', 'valor_comissao' => 'decimal:2', 'data_contrato' => 'date', 'data_primeira_parcela' => 'date', 'data_entrega_prevista' => 'date'];
     public function unidade(): BelongsTo { return $this->belongsTo(Unidade::class); }
     public function cliente(): BelongsTo { return $this->belongsTo(Cliente::class); }
     public function corretor(): BelongsTo { return $this->belongsTo(Corretor::class); }

@@ -49,7 +49,6 @@ class ClienteResource extends Resource
                 TextInput::make('cpf')->label('CPF')->maxLength(14)->unique(ignoreRecord: true),
                 TextInput::make('email')->label('E-mail')->email()->maxLength(100),
                 TextInput::make('telefone')->label('Telefone')->maxLength(20),
-                TextInput::make('whatsapp')->label('WhatsApp')->maxLength(20),
                 TextInput::make('profissao')->label('Profissão')->maxLength(100),
                 TextInput::make('renda_familiar')->label('Renda Familiar')->numeric()->prefix('R$'),
                 Select::make('estado_civil')->label('Estado Civil')->options(Cliente::ESTADOS_CIVIS)->native(false)->live(),
@@ -113,7 +112,7 @@ class ClienteResource extends Resource
         return [
             TextColumn::make('nome')->label('Nome')->searchable()->sortable()->weight('medium'),
             TextColumn::make('cpf')->sortable()->label('CPF')->searchable()->placeholder('—'),
-            TextColumn::make('whatsapp')->sortable()->label('WhatsApp')->placeholder('—'),
+            TextColumn::make('telefone')->sortable()->label('Telefone')->placeholder('—'),
             TextColumn::make('email')->sortable()->label('E-mail')->searchable()->placeholder('—'),
             TextColumn::make('estado_civil')
                 ->sortable()
@@ -139,10 +138,10 @@ class ClienteResource extends Resource
                         ->description('CPF', position: 'above')
                         ->searchable()
                         ->placeholder('—'),
-                    TextColumn::make('whatsapp')
+                    TextColumn::make('telefone')
                         ->sortable()
-                        ->label('WhatsApp')
-                        ->description('WhatsApp', position: 'above')
+                        ->label('Telefone')
+                        ->description('Telefone', position: 'above')
                         ->placeholder('—'),
                 ]),
                 TextColumn::make('email')

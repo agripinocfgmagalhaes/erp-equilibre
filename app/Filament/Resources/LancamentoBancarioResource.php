@@ -48,6 +48,7 @@ class LancamentoBancarioResource extends Resource
     public static function table(Table $table): Table
     {
         $saldosPorContaEData = LancamentoBancario::query()
+            ->whereIn('origem', ['extrato_inter', 'manual', 'transferencia'])
             ->orderBy('conta_bancaria_id')->orderBy('data')->orderBy('id')
             ->get()
             ->groupBy('conta_bancaria_id')
@@ -60,7 +61,7 @@ class LancamentoBancarioResource extends Resource
                 }
                 return $porDia;
             })->toArray();
-        return $table->modifyQueryUsing(fn (Builder $query) => $query->with('contaBancaria'))
+        return $table->modifyQueryUsing(fn (Builder $query) => $query->with('contaBancaria')->whereIn('origem', ['extrato_inter', 'manual', 'transferencia']))
             ->columns([
                 TextColumn::make('contaBancaria.nome')->label('Conta')->sortable(),
                 TextColumn::make('descricao')->sortable()->label('Descrição')->searchable()->limit(50),
@@ -108,16 +109,18 @@ class LancamentoBancarioResource extends Resource
                         $candidato = null;
                         $destino = null;
                         if ($record->tipo === 'saida') {
-                            $candidato = \App\Models\ContaPagar::whereNotIn('status', ['pago', 'cancelado'])
+                            $candidato = \App\Models\ContaPagar::where('status', '!=', 'cancelado')
                                 ->where('valor', $record->valor)
                                 ->whereBetween('data_vencimento', [$record->data->copy()->subDays(5), $record->data->copy()->addDays(5)])
+                                ->orderByRaw("status = 'pago' ASC")
                                 ->orderByRaw('ABS(DATEDIFF(data_vencimento, ?))', [$record->data])
                                 ->first();
                             if ($candidato) $destino = 'vincular_cp';
                         } elseif ($record->tipo === 'entrada') {
-                            $candidato = \App\Models\ContaReceber::whereNotIn('status', ['recebido', 'cancelado'])
+                            $candidato = \App\Models\ContaReceber::where('status', '!=', 'cancelado')
                                 ->where('valor', $record->valor)
                                 ->whereBetween('data_vencimento', [$record->data->copy()->subDays(5), $record->data->copy()->addDays(5)])
+                                ->orderByRaw("status = 'recebido' ASC")
                                 ->orderByRaw('ABS(DATEDIFF(data_vencimento, ?))', [$record->data])
                                 ->first();
                             if ($candidato) $destino = 'vincular_cr';
@@ -133,17 +136,25 @@ class LancamentoBancarioResource extends Resource
                         if ($record->tipo === 'entrada') $opcoes = ['vincular_cr' => 'Vincular a Conta a Receber existente', 'gerar_cr' => 'Gerar nova Conta a Receber'] + $opcoes;
                         return [
                             \Filament\Forms\Components\Radio::make('destino')->label('O que fazer com esse lançamento?')->options($opcoes)->required()->live()->inline()->inlineLabel(false),
+                            \Filament\Forms\Components\Placeholder::make('aviso_baixa_manual')->label('')
+                                ->content('Títulos já com baixa manual aparecem marcados com "(já baixado)" — selecionar um deles apenas confirma a baixa com o extrato, sem alterar valores.')
+                                ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => in_array($get('destino'), ['vincular_cp', 'vincular_cr'])),
                             Select::make('titulo_id')->label('Título')->searchable()->native(false)
                                 ->options(function (\Filament\Schemas\Components\Utilities\Get $get) use ($record) {
                                     if ($get('destino') === 'vincular_cp') {
-                                        return \App\Models\ContaPagar::whereNotIn('status', ['pago', 'cancelado'])->get()->mapWithKeys(fn ($c) => [$c->id => "#{$c->id} - {$c->descricao} - {$c->nome_contato} - Venc: " . $c->data_vencimento->format('d/m/Y') . " - R$ " . number_format($c->valor, 2, ',', '.')]);
+                                        return \App\Models\ContaPagar::where('status', '!=', 'cancelado')->get()->mapWithKeys(fn ($c) => [$c->id => "#{$c->id} - {$c->descricao} - {$c->nome_contato} - Venc: " . $c->data_vencimento?->format('d/m/Y') . " - R$ " . number_format($c->valor, 2, ',', '.') . ($c->status === 'pago' ? ' (já baixado)' : '')]);
                                     }
                                     if ($get('destino') === 'vincular_cr') {
-                                        return \App\Models\ContaReceber::whereNotIn('status', ['recebido', 'cancelado'])->with('cliente')->get()->mapWithKeys(fn ($c) => [$c->id => "#{$c->id} - {$c->descricao} - " . ($c->cliente->nome ?? 'sem cliente') . " - Venc: " . $c->data_vencimento->format('d/m/Y') . " - R$ " . number_format($c->valor, 2, ',', '.')]);
+                                        return \App\Models\ContaReceber::where('status', '!=', 'cancelado')->with('cliente')->get()->mapWithKeys(fn ($c) => [$c->id => "#{$c->id} - {$c->descricao} - " . ($c->cliente->nome ?? 'sem cliente') . " - Venc: " . $c->data_vencimento?->format('d/m/Y') . " - R$ " . number_format($c->valor, 2, ',', '.') . ($c->status === 'recebido' ? ' (já baixado)' : '')]);
                                     }
                                     return [];
                                 })
                                 ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => in_array($get('destino'), ['vincular_cp', 'vincular_cr'])),
+                            \Filament\Forms\Components\Toggle::make('quitar_outros')->label('Este lançamento também quita outros títulos')->live()
+                                ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('destino') === 'vincular_cr'),
+                            Select::make('titulos_extra')->label('Outros títulos a quitar')->multiple()->searchable()->native(false)
+                                ->options(fn () => \App\Models\ContaReceber::whereNotIn('status', ['recebido', 'cancelado'])->with('cliente')->get()->mapWithKeys(fn ($c) => [$c->id => "#{$c->id} - {$c->descricao} - " . ($c->cliente->nome ?? 'sem cliente') . ' - Venc: ' . $c->data_vencimento?->format('d/m/Y') . ' - Saldo R$ ' . number_format((float) $c->valor - (float) $c->valor_recebido, 2, ',', '.')]))
+                                ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('destino') === 'vincular_cr' && (bool) $get('quitar_outros')),
                             Select::make('cliente_id')->label('Cliente')->options(fn () => \App\Models\Cliente::orderBy('nome')->pluck('nome', 'id'))->searchable()->native(false)
                                 ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get('destino') === 'gerar_cr'),
                             Select::make('contato_key')->label('Contato')->options(fn () => \App\Models\Contato::optionsParaSelect())->searchable()->native(false)
@@ -157,13 +168,40 @@ class LancamentoBancarioResource extends Resource
                         ];
                     })
                     ->action(function (LancamentoBancario $record, array $data) {
+                      try {
                         if ($data['destino'] === 'vincular_cp') {
                             $conta = \App\Models\ContaPagar::find($data['titulo_id']);
-                            $conta?->darBaixa($record->valor, $record->data->toDateString());
+                            if ($conta && ! in_array($conta->status, ['pago', 'cancelado'], true)) {
+                                $conta->darBaixa($record->valor, $record->data->toDateString());
+                            }
+                            $conta?->update(['conciliado_bancariamente' => true]);
                             $record->update(['conciliado' => true, 'conciliado_em' => now(), 'conciliado_por' => auth()->id(), 'origem_id' => $conta?->id]);
                         } elseif ($data['destino'] === 'vincular_cr') {
                             $conta = \App\Models\ContaReceber::find($data['titulo_id']);
-                            $conta?->update(['status' => 'recebido', 'valor_recebido' => $record->valor, 'data_recebimento' => $record->data]);
+                            if ($conta && ! in_array($conta->status, ['recebido', 'cancelado'], true)) {
+                                $ids = ! empty($data['quitar_outros'])
+                                    ? array_values(array_unique(array_merge([$conta->id], array_map('intval', $data['titulos_extra'] ?? []))))
+                                    : [$conta->id];
+                                $titulos = \App\Models\ContaReceber::whereIn('id', $ids)->whereNotIn('status', ['recebido', 'cancelado'])->orderBy('data_vencimento')->get();
+                                $restante = round((float) $record->valor, 2);
+                                \Illuminate\Support\Facades\DB::transaction(function () use ($titulos, $record, &$restante) {
+                                    if ($titulos->isEmpty()) {
+                                        throw new \InvalidArgumentException('Nenhum título em aberto para receber este lançamento.');
+                                    }
+                                    $svc = app(\App\Services\Financeiro\ContaReceberService::class);
+                                    $ultimoId = $titulos->last()->id;
+                                    foreach ($titulos as $t) {
+                                        if ($restante <= 0) break;
+                                        $saldo = round((float) $t->valor - (float) $t->valor_recebido, 2);
+                                        // o último título recebe também a diferença (juros/multa = valor_recebido - valor)
+                                        $pagar = $t->id === $ultimoId ? $restante : min($saldo, $restante);
+                                        if ($pagar <= 0) continue;
+                                        $svc->darBaixa($t, $pagar, $record->data->toDateString(), null, true);
+                                        $restante = round($restante - $pagar, 2);
+                                    }
+                                });
+                            }
+                            $conta?->update(['conciliado_bancariamente' => true]);
                             $record->update(['conciliado' => true, 'conciliado_em' => now(), 'conciliado_por' => auth()->id(), 'origem_id' => $conta?->id]);
                         } elseif ($data['destino'] === 'gerar_cp') {
                             [$contatoTipo, $contatoId] = str_contains($data['contato_key'] ?? '', '|') ? explode('|', $data['contato_key'], 2) : [null, null];
@@ -179,6 +217,7 @@ class LancamentoBancarioResource extends Resource
                                 'data_vencimento' => $record->data,
                                 'data_pagamento' => $record->data,
                                 'status' => 'pago',
+                                'conciliado_bancariamente' => true,
                             ]);
                             $record->update(['conciliado' => true, 'conciliado_em' => now(), 'conciliado_por' => auth()->id(), 'origem_id' => $novaConta->id]);
                         } elseif ($data['destino'] === 'gerar_cr') {
@@ -190,10 +229,52 @@ class LancamentoBancarioResource extends Resource
                                 'data_vencimento' => $record->data,
                                 'data_recebimento' => $record->data,
                                 'status' => 'recebido',
+                                'conciliado_bancariamente' => true,
                             ]);
                             $record->update(['conciliado' => true, 'conciliado_em' => now(), 'conciliado_por' => auth()->id(), 'origem_id' => $novaConta->id]);
                         }
                         Notification::make()->title('Lançamento conciliado')->success()->send();
+                      } catch (\Throwable $e) {
+                        report($e);
+                        Notification::make()->title('Falha ao conciliar')->body($e->getMessage())->danger()->send();
+                      }
+                    }),
+                Action::make('desfazerConciliacao')->label('Desfazer')->icon('heroicon-o-arrow-uturn-left')->color('gray')
+                    ->visible(fn (LancamentoBancario $record) => $record->origem === 'extrato_inter' && $record->conciliado)
+                    ->requiresConfirmation()
+                    ->modalHeading('Desfazer conciliação')
+                    ->modalDescription('O lançamento volta pra pendente. Se o título vinculado tiver sido baixado por essa conciliação, você pode reverter a baixa também.')
+                    ->schema([
+                        \Filament\Forms\Components\Checkbox::make('reverter_titulo')
+                            ->label('Também reverter a baixa do título vinculado (volta para aberto/vencido, zera valor recebido/pago)')
+                            ->default(false)
+                            ->helperText('Cuidado: se o título tiver recebido outros pagamentos parciais além deste, eles também serão zerados — não há como reverter só este pagamento isoladamente.'),
+                    ])
+                    ->action(function (LancamentoBancario $record, array $data) {
+                        if (! empty($data['reverter_titulo']) && $record->origem_id) {
+                            if ($record->tipo === 'entrada') {
+                                $conta = \App\Models\ContaReceber::find($record->origem_id);
+                                if ($conta) {
+                                    $novoStatus = $conta->data_vencimento && $conta->data_vencimento->isPast() ? 'vencido' : 'aberto';
+                                    $conta->update(['status' => $novoStatus, 'valor_recebido' => 0, 'data_recebimento' => null, 'conciliado_bancariamente' => false]);
+                                }
+                            } elseif ($record->tipo === 'saida') {
+                                $conta = \App\Models\ContaPagar::find($record->origem_id);
+                                if ($conta) {
+                                    $novoStatus = $conta->data_vencimento && $conta->data_vencimento->isPast() ? 'vencido' : 'aberto';
+                                    $conta->update(['status' => $novoStatus, 'valor_pago' => 0, 'data_pagamento' => null, 'conciliado_bancariamente' => false]);
+                                }
+                            }
+                        } elseif ($record->origem_id) {
+                            if ($record->tipo === 'entrada') {
+                                \App\Models\ContaReceber::whereKey($record->origem_id)->update(['conciliado_bancariamente' => false]);
+                            } elseif ($record->tipo === 'saida') {
+                                \App\Models\ContaPagar::whereKey($record->origem_id)->update(['conciliado_bancariamente' => false]);
+                            }
+                        }
+
+                        $record->update(['conciliado' => false, 'conciliado_em' => null, 'conciliado_por' => null, 'origem_id' => null]);
+                        Notification::make()->title('Conciliação desfeita')->success()->send();
                     }),
                 EditAction::make()->slideOver()->iconButton()->visible(fn (LancamentoBancario $record) => $record->origem === 'manual'),
                 DeleteAction::make()->iconButton()->visible(fn (LancamentoBancario $record) => $record->origem === 'manual'),

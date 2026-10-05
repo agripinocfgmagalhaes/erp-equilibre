@@ -167,6 +167,49 @@ class InterBoletoService
         $conta->update(['inter_situacao' => 'CANCELADO']);
     }
 
+    public function cancelarBoleto(ContaReceber $conta, string $motivo = 'ACERTOS'): void
+    {
+        if (! $conta->inter_codigo_solicitacao) {
+            throw new Exception('Título sem boleto emitido.');
+        }
+        $this->consultar($conta);
+        $conta->refresh();
+        if ($conta->status === 'recebido' || $conta->inter_situacao === 'RECEBIDO') {
+            throw new Exception('Boleto já foi pago; não é possível cancelar.');
+        }
+        if ($conta->inter_situacao !== 'CANCELADO') {
+            $this->cancelar($conta, $motivo);
+        }
+        $conta->update([
+            'inter_codigo_solicitacao' => null, 'inter_situacao' => null, 'inter_emitido_em' => null,
+            'inter_nosso_numero' => null, 'inter_linha_digitavel' => null, 'inter_pix_copia_cola' => null,
+        ]);
+    }
+
+    public function reemitir(ContaReceber $conta, array $novos = []): array
+    {
+        $antigo = $conta->inter_codigo_solicitacao;
+        if ($antigo) {
+            $this->consultar($conta);
+            $conta->refresh();
+            if ($conta->status === 'recebido' || $conta->inter_situacao === 'RECEBIDO') {
+                throw new Exception('Boleto já foi pago; não é possível reemitir.');
+            }
+            if ($conta->inter_situacao !== 'CANCELADO') {
+                $this->cancelar($conta);
+            }
+        }
+        $conta->update($novos + [
+            'inter_codigo_solicitacao' => null, 'inter_situacao' => null, 'inter_emitido_em' => null,
+            'inter_nosso_numero' => null, 'inter_linha_digitavel' => null, 'inter_pix_copia_cola' => null,
+        ]);
+        $res = $this->emitir($conta->fresh());
+        if ($antigo && $conta->fresh()->inter_codigo_solicitacao === $antigo) {
+            throw new Exception('Inter retornou o boleto antigo; verifique no app do Inter.');
+        }
+        return $res;
+    }
+
     public function registrarWebhook(string $url): array
     {
         $res = $this->http()->withToken($this->token())
