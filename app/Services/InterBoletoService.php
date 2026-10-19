@@ -58,7 +58,7 @@ class InterBoletoService
             'seuNumero' => (string) $conta->id,
             'valorNominal' => (float) $conta->valor,
             'dataVencimento' => $conta->data_vencimento->format('Y-m-d'),
-            'numDiasAgenda' => 60,
+            'numDiasAgenda' => 30,
             'pagador' => [
                 'cpfCnpj' => preg_replace('/\D/', '', $cliente->cpf),
                 'tipoPessoa' => strlen(preg_replace('/\D/', '', $cliente->cpf)) > 11 ? 'JURIDICA' : 'FISICA',
@@ -71,7 +71,17 @@ class InterBoletoService
                 'cep' => preg_replace('/\D/', '', $cliente->cep ?? '61600000'),
             ],
             'mensagem' => ['linha1' => $conta->descricao],
+            'multa' => ['codigo' => 'PERCENTUAL', 'taxa' => 2.00],
+            'mora' => ['codigo' => 'TAXAMENSAL', 'taxa' => 1.00],
         ];
+
+        // E-mail do pagador (o Inter notifica o cliente); só envia se válido e com até 50 caracteres
+        foreach (preg_split('/[;,\s]+/', (string) ($cliente->email ?? ''), -1, PREG_SPLIT_NO_EMPTY) as $email) {
+            if (filter_var($email, FILTER_VALIDATE_EMAIL) && strlen($email) <= 50) {
+                $payload['pagador']['email'] = $email;
+                break;
+            }
+        }
 
         $res = $this->http()->withToken($this->token())
             ->post("{$this->baseUrl}/cobranca/v3/cobrancas", $payload);
@@ -113,8 +123,15 @@ class InterBoletoService
             'inter_pix_copia_cola' => $data['pix']['pixCopiaECola'] ?? $conta->inter_pix_copia_cola,
         ]);
 
-        if (($data['cobranca']['situacao'] ?? null) === 'RECEBIDO') {
-            $conta->darBaixa($conta->valor, now()->toDateString());
+        if (($data['cobranca']['situacao'] ?? null) === 'RECEBIDO' && ! in_array($conta->status, ['recebido', 'cancelado'], true)) {
+            // baixa pelo valor realmente recebido pelo Inter (inclui multa/juros); a diferença vira juros_multa
+            $recebido = (float) ($data['cobranca']['valorTotalRecebido'] ?? $data['cobranca']['valorTotalRecebimento'] ?? 0);
+            $pago = round($recebido - (float) $conta->valor_recebido, 2);
+            if ($pago <= 0) {
+                $pago = round((float) $conta->valor - (float) $conta->valor_recebido, 2);
+            }
+            $dataPagamento = substr((string) ($data['cobranca']['dataSituacao'] ?? now()->toDateString()), 0, 10);
+            app(\App\Services\Financeiro\ContaReceberService::class)->darBaixa($conta->fresh(), $pago, $dataPagamento, null, true);
         }
 
         return $data;
