@@ -293,6 +293,34 @@ Action::make('emitirBoleto')->label('Emitir Boleto Inter')->icon('heroicon-o-doc
                     }
                     Notification::make()->title($ok . ' atualizado(s), ' . $ign . ' ignorado(s)' . ($falha ? ', ' . $falha . ' falha(s) ao reemitir (conferir no Inter)' : ''))->success()->send();
                 }),
+            \Filament\Actions\BulkAction::make('reemitirBoletosLote')->label('Cancelar e Reemitir Boletos')->icon('heroicon-o-arrow-path')->color('warning')
+                ->schema([
+                    DatePicker::make('data_vencimento')->label('Novo vencimento (opcional)')->displayFormat('d/m/Y')->minDate(now())
+                        ->helperText('Em branco mantém o vencimento de cada título. Títulos já vencidos exigem nova data, pois o Inter não emite boleto com vencimento passado.'),
+                ])
+                ->modalDescription('Cancela o boleto atual no Inter e emite um novo para cada título selecionado com boleto. Recebidos, cancelados e sem boleto são ignorados. Para lotes grandes, faça em partes de até 30.')
+                ->deselectRecordsAfterCompletion()
+                ->action(function ($records, array $data) {
+                    set_time_limit(300);
+                    $svc = app(\App\Services\InterBoletoService::class);
+                    $novaData = $data['data_vencimento'] ?? null;
+                    $ok = 0; $ign = 0; $vencidos = 0; $erros = [];
+                    foreach ($records as $r) {
+                        if (in_array($r->status, ['recebido', 'cancelado']) || ! $r->inter_codigo_solicitacao) { $ign++; continue; }
+                        if (! $novaData && \Carbon\Carbon::parse($r->data_vencimento)->lt(today())) { $vencidos++; continue; }
+                        try {
+                            $svc->reemitir($r, $novaData ? ['data_vencimento' => $novaData] : []);
+                            $ok++;
+                            usleep(300000);
+                        } catch (\Throwable $e) {
+                            $erros[] = '#' . $r->id . ': ' . mb_substr($e->getMessage(), 0, 120);
+                        }
+                    }
+                    $titulo = $ok . ' reemitido(s), ' . $ign . ' ignorado(s)' . ($vencidos ? ', ' . $vencidos . ' vencido(s) sem nova data' : '') . ($erros ? ', ' . count($erros) . ' erro(s)' : '');
+                    $n = Notification::make()->title($titulo);
+                    if ($erros) { $n->body(implode("\n", array_slice($erros, 0, 5)) . "\nTítulos com erro podem estar sem boleto: use Emitir Boleto Inter.")->warning(); } else { $n->success(); }
+                    $n->send();
+                }),
             DeleteBulkAction::make(),
         ])])
         ->defaultSort('data_vencimento')->dragReorderableColumns()->stickableColumns();
