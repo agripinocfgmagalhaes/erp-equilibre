@@ -29,8 +29,8 @@ class ImportarContratoPlanilhaService
 
     private function money(string $v): float
     {
-        $v = trim($v);
-        if ($v === '') return 0.0;
+        $v = preg_replace('/[^\d,.\-]/', '', str_replace("\xC2\xA0", ' ', $v));
+        if ($v === '' || $v === '-') return 0.0;
         return (float) str_replace(',', '.', str_replace('.', '', $v));
     }
 
@@ -168,8 +168,14 @@ class ImportarContratoPlanilhaService
 
             // Balões (até 3): valor + vencimento; ignora os vazios/zerados
             foreach ([1, 2, 3] as $n) {
-                $valorBalao = $this->money($get("balao{$n}"));
-                if ($valorBalao <= 0) continue;
+                $brutoBalao = $get("balao{$n}");
+                $valorBalao = $this->money($brutoBalao);
+                if ($valorBalao <= 0) {
+                    if (preg_match('/[1-9]/', $brutoBalao)) {
+                        throw new InvalidArgumentException("Balão {$n}: não consegui ler o valor \"{$brutoBalao}\" na planilha.");
+                    }
+                    continue;
+                }
                 $vencBalao = $this->date($get("venc_balao{$n}"));
                 if (!$vencBalao) {
                     throw new InvalidArgumentException("Balão {$n} tem valor mas está sem data de vencimento na planilha.");
