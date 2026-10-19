@@ -61,6 +61,7 @@
         .linha { font-family:monospace; background:#f9fafb; padding:8px; border-radius:6px; font-size:13px; word-break:break-all; margin:8px 0; }
         .acoes { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
         .acoes a, .acoes button { text-decoration:none; font-size:14px; padding:8px 14px; border-radius:8px; box-shadow:none; }
+        .acoes a, .acoes button { flex:1 1 0; min-width:0; box-sizing:border-box; display:flex; align-items:center; justify-content:center; text-align:center; line-height:1.2; }
         .btn-pdf { background:#0f172a; color:#fff; }
         .btn-pix { background:#10b981; color:#fff; border:0; cursor:pointer; }
         .vazio { color:#6b7280; text-align:center; padding:24px 0; }
@@ -97,9 +98,6 @@
                         <a class="btn-pdf" href="{{ route('boleto.pdf.publico', $conta->inter_codigo_solicitacao) }}" target="_blank">Ver PDF</a>
                         @if($conta->inter_linha_digitavel)
                             <button class="btn-pix" style="background:#1e293b" onclick="navigator.clipboard.writeText('{{ $conta->inter_linha_digitavel }}'); this.textContent='Copiado!'">Copiar código de barras</button>
-                        @endif
-                        @if($conta->inter_pix_copia_cola)
-                            <button class="btn-pix" onclick="navigator.clipboard.writeText('{{ $conta->inter_pix_copia_cola }}'); this.textContent='Copiado!'">Copiar PIX</button>
                         @endif
                     </div>
                 </div>
